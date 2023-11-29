@@ -1,0 +1,720 @@
+
+#include "xsec.h"
+#include "xsec_raw.h"
+
+const float atomicMass[101] = {0.0, 1.008000e+00, 4.002600e+00, 6.939000e+00, 9.012200e+00, 1.081100e+01, 1.201100e+01, 1.400700e+01, 1.599900e+01, 1.899800e+01, 2.017900e+01,
+														  2.299000e+01, 2.431200e+01, 2.698200e+01, 2.808600e+01, 3.097400e+01, 3.206400e+01, 3.545300e+01, 3.994800e+01, 3.910200e+01, 4.008000e+01,
+														  4.495800e+01, 4.790000e+01, 5.094200e+01, 5.199600e+01, 5.493800e+01, 5.584700e+01, 5.893300e+01, 5.871000e+01, 6.354000e+01, 6.537000e+01,
+														  6.972000e+01, 7.259000e+01, 7.492200e+01, 7.896000e+01, 7.990900e+01, 8.380000e+01, 8.547000e+01, 8.762000e+01, 8.890500e+01, 9.122000e+01,
+														  9.290600e+01, 9.594000e+01, 9.900000e+01, 1.017000e+02, 1.029100e+02, 1.064000e+02, 1.078700e+02, 1.124000e+02, 1.148200e+02, 1.186900e+02,
+														  1.217500e+02, 1.276000e+02, 1.269000e+02, 1.313000e+02, 1.329100e+02, 1.373400e+02, 1.389100e+02, 1.401200e+02, 1.409100e+02, 1.442400e+02,
+														  1.450000e+02, 1.503500e+02, 1.519600e+02, 1.572500e+02, 1.589200e+02, 1.625000e+02, 1.649300e+02, 1.672600e+02, 1.689300e+02, 1.730400e+02,
+														  1.749700e+02, 1.784900e+02, 1.809500e+02, 1.838500e+02, 1.862000e+02, 1.902000e+02, 1.922000e+02, 1.950900e+02, 1.969700e+02, 2.005900e+02,
+														  2.043700e+02, 2.071900e+02, 2.089800e+02, 2.090000e+02, 2.100000e+02, 2.220000e+02, 2.230000e+02, 2.260000e+02, 2.270000e+02, 2.320400e+02,
+														  2.330000e+02, 2.380500e+02, 2.370000e+02, 2.390500e+02, 2.420000e+02, 2.470000e+02, 2.470000e+02, 2.510000e+02, 2.520000e+02, 2.570000e+02};
+
+
+const char elementSymbols[101][3] = { {'-'},{'H'},{'H','e'},{'L','i'},{'B','e'},{'B'},{'C'},{'N'},{'O'},{'F'},{'N','e'},{'N','a'},{'M','g'},{'A','l'},{'S','i'},{'P'},{'S'},{'C','l'},{'A','r'},{'K'},{'C','a'},
+                      {'S','c'},{'T','i'},{'V'},{'C','r'},{'M','n'},{'F','e'},{'C','o'},{'N','i'},{'C','u'},{'Z','n'},{'G','a'},{'G','e'},{'A','s'},{'S','e'},{'B','r'},{'K','r'},{'R','b'},{'S','r'},{'Y'},{'Z','r'},
+                      {'N','b'},{'M','o'},{'T','c'},{'R','u'},{'R','h'},{'P','d'},{'A','g'},{'C','d'},{'I','n'},{'S','n'},{'S','b'},{'T','e'},{'I'},{'X','e'},{'C','s'},{'B','a'},{'L','a'},{'C','e'},{'P','r'},{'N','d'},
+                      {'P','m'},{'S','m'},{'E','u'},{'G','d'},{'T','b'},{'D','y'},{'H','o'},{'E','r'},{'T','m'},{'Y','b'},{'L','u'},{'H','f'},{'T','a'},{'W'},{'R','e'},{'O','s'},{'I','r'},{'P','t'},{'A','u'},{'H','g'},
+                      {'T','l'},{'P','b'},{'B','i'},{'P','o'},{'A','t'},{'R','n'},{'F','r'},{'R','a'},{'A','c'},{'T','h'},{'P','a'},{'U'},{'N','p'},{'P','u'},{'A','m'},{'C','m'},{'B','k'},{'C','f'},{'E','s'},{'F','m'} };
+
+xsec::xsec()
+{
+    // how to use:
+    // nonUniformCrossSectionLUTs LUTs;
+    // LUTreader.init(allParams->materialPropertiesFolder);
+    // LUTreader.calculateCrossSectionLUT(sigmaTotal_LUT);
+    // LUTreader.calculateCrossSectionLUT(sigmaCompton_LUT, nonUniformCrossSectionLUTs::INCOHERENT);
+    // LUTreader.calculateCrossSectionLUT(sigmaRayleigh_LUT, nonUniformCrossSectionLUTs::COHERENT);
+    
+    logPhotoelectricCrossSections.clear();
+    logPhotoelectricEnergies.clear();
+    PhotoelectricEnergies.clear();
+    
+    logIncoherentCrossSections.clear();
+    logIncoherentEnergies.clear();
+    IncoherentEnergies.clear();
+    
+    logCoherentCrossSections.clear();
+    logCoherentEnergies.clear();
+    CoherentEnergies.clear();
+    
+    logPairProductionCrossSections.clear();
+    logPairProductionEnergies.clear();
+    PairProductionEnergies.clear();
+    
+    logTripletProductionCrossSections.clear();
+    logTripletProductionEnergies.clear();
+    TripletProductionEnergies.clear();
+}
+
+xsec::~xsec()
+{
+    clearAll();
+}
+
+bool xsec::clearAll()
+{
+    // PHOTOELECTRIC
+    for (int i = 0; i < int(logPhotoelectricCrossSections.size()); i++)
+    {
+        if (logPhotoelectricCrossSections[i] != NULL)
+            free(logPhotoelectricCrossSections[i]);
+        logPhotoelectricCrossSections[i] = NULL;
+    }
+    logPhotoelectricCrossSections.clear();
+    
+    for (int i = 0; i < int(logPhotoelectricEnergies.size()); i++)
+    {
+        if (logPhotoelectricEnergies[i] != NULL)
+            free(logPhotoelectricEnergies[i]);
+        logPhotoelectricEnergies[i] = NULL;
+    }
+    logPhotoelectricEnergies.clear();
+    
+    for (int i = 0; i < int(PhotoelectricEnergies.size()); i++)
+    {
+        if (PhotoelectricEnergies[i] != NULL)
+            free(PhotoelectricEnergies[i]);
+        PhotoelectricEnergies[i] = NULL;
+    }
+    PhotoelectricEnergies.clear();
+    
+    // INCOHERENT
+    for (int i = 0; i < int(logIncoherentCrossSections.size()); i++)
+    {
+        if (logIncoherentCrossSections[i] != NULL)
+            free(logIncoherentCrossSections[i]);
+        logIncoherentCrossSections[i] = NULL;
+    }
+    logIncoherentCrossSections.clear();
+
+    for (int i = 0; i < int(logIncoherentEnergies.size()); i++)
+    {
+        if (logIncoherentEnergies[i] != NULL)
+            free(logIncoherentEnergies[i]);
+        logIncoherentEnergies[i] = NULL;
+    }
+    logIncoherentEnergies.clear();
+    
+    for (int i = 0; i < int(IncoherentEnergies.size()); i++)
+    {
+        if (IncoherentEnergies[i] != NULL)
+            free(IncoherentEnergies[i]);
+        IncoherentEnergies[i] = NULL;
+    }
+    IncoherentEnergies.clear();
+    
+    // COHERENT
+    for (int i = 0; i < int(logCoherentCrossSections.size()); i++)
+    {
+        if (logCoherentCrossSections[i] != NULL)
+            free(logCoherentCrossSections[i]);
+        logCoherentCrossSections[i] = NULL;
+    }
+    logCoherentCrossSections.clear();
+
+    for (int i = 0; i < int(logCoherentEnergies.size()); i++)
+    {
+        if (logCoherentEnergies[i] != NULL)
+            free(logCoherentEnergies[i]);
+        logCoherentEnergies[i] = NULL;
+    }
+    logCoherentEnergies.clear();
+
+    for (int i = 0; i < int(CoherentEnergies.size()); i++)
+    {
+        if (CoherentEnergies[i] != NULL)
+            free(CoherentEnergies[i]);
+        CoherentEnergies[i] = NULL;
+    }
+    CoherentEnergies.clear();
+    
+    // PAIR PAIRPRODUCTION
+    for (int i = 0; i < int(logPairProductionCrossSections.size()); i++)
+    {
+        if (logPairProductionCrossSections[i] != NULL)
+            free(logPairProductionCrossSections[i]);
+        logPairProductionCrossSections[i] = NULL;
+    }
+    logPairProductionCrossSections.clear();
+
+    for (int i = 0; i < int(logPairProductionEnergies.size()); i++)
+    {
+        if (logPairProductionEnergies[i] != NULL)
+            free(logPairProductionEnergies[i]);
+        logPairProductionEnergies[i] = NULL;
+    }
+    logPairProductionEnergies.clear();
+    
+    for (int i = 0; i < int(PairProductionEnergies.size()); i++)
+    {
+        if (PairProductionEnergies[i] != NULL)
+            free(PairProductionEnergies[i]);
+        PairProductionEnergies[i] = NULL;
+    }
+    PairProductionEnergies.clear();
+
+    // TRIPLET PRODUCTION
+    for (int i = 0; i < int(logTripletProductionCrossSections.size()); i++)
+    {
+        if (logTripletProductionCrossSections[i] != NULL)
+            free(logTripletProductionCrossSections[i]);
+        logTripletProductionCrossSections[i] = NULL;
+    }
+    logTripletProductionCrossSections.clear();
+
+    for (int i = 0; i < int(logTripletProductionEnergies.size()); i++)
+    {
+        if (logTripletProductionEnergies[i] != NULL)
+            free(logTripletProductionEnergies[i]);
+        logTripletProductionEnergies[i] = NULL;
+    }
+    logTripletProductionEnergies.clear();
+
+    for (int i = 0; i < int(TripletProductionEnergies.size()); i++)
+    {
+        if (TripletProductionEnergies[i] != NULL)
+            free(TripletProductionEnergies[i]);
+        TripletProductionEnergies[i] = NULL;
+    }
+    TripletProductionEnergies.clear();
+
+    return true;
+}
+
+bool xsec::init()
+{
+    if (logPhotoelectricCrossSections.size() == 0 || logIncoherentCrossSections.size() == 0 || logCoherentCrossSections.size() == 0 || logPairProductionCrossSections.size() == 0 || logTripletProductionCrossSections.size() == 0)
+        clearAll();
+    else
+        return true;
+    
+	//printf("loading hard-coded cross section tables!\n");
+	xsec_raw hardCodedTables;
+	int* tempI = (int*) &hardCodedTables.data[0];
+	float* tempF = (float*) &hardCodedTables.data[sizeof(int)];
+
+	int64 curOffset = 0;
+    
+    for (int iz = 0; iz < 100; iz++)
+    {
+        double Z = double(iz+1);
+        double c = 0.6022169 / Z;
+        //c = 0.1*0.6022169 /atomicMass[iz+1];
+        c = 0.6022169 / atomicMass[iz + 1];
+        
+        // Photoelectric
+		tempI = (int*) &hardCodedTables.data[curOffset]; curOffset += sizeof(int);
+		N_Photoelectric[iz] = *tempI;
+
+        logPhotoelectricCrossSections.push_back((float*)malloc(sizeof(float)*N_Photoelectric[iz]));
+        logPhotoelectricEnergies.push_back((float*)malloc(sizeof(float)*N_Photoelectric[iz]));
+        PhotoelectricEnergies.push_back((float*)malloc(sizeof(float)*N_Photoelectric[iz]));
+        
+		for (int i = 0; i < N_Photoelectric[iz]; i++)
+		{
+			tempF = (float*) &hardCodedTables.data[curOffset]; curOffset += sizeof(float);
+			PhotoelectricEnergies[iz][i] = *tempF;
+		}
+
+		for (int i = 0; i < N_Photoelectric[iz]; i++)
+		{
+			tempF = (float*) &hardCodedTables.data[curOffset]; curOffset += sizeof(float);
+			logPhotoelectricCrossSections[iz][i] = *tempF;
+		}
+
+        for (int i = 0; i < N_Photoelectric[iz]; i++)
+        {
+            logPhotoelectricCrossSections[iz][i] = log(c*logPhotoelectricCrossSections[iz][i]);
+            logPhotoelectricEnergies[iz][i] = log(PhotoelectricEnergies[iz][i]);
+        }
+
+        // Incoherent
+		tempI = (int*) &hardCodedTables.data[curOffset]; curOffset += sizeof(int);
+		N_Incoherent[iz] = *tempI;
+
+		logIncoherentCrossSections.push_back((float*)malloc(sizeof(float)*N_Incoherent[iz]));
+        logIncoherentEnergies.push_back((float*)malloc(sizeof(float)*N_Incoherent[iz]));
+        IncoherentEnergies.push_back((float*)malloc(sizeof(float)*N_Incoherent[iz]));
+
+		for (int i = 0; i < N_Incoherent[iz]; i++)
+		{
+			tempF = (float*) &hardCodedTables.data[curOffset]; curOffset += sizeof(float);
+			IncoherentEnergies[iz][i] = *tempF;
+		}
+
+		for (int i = 0; i < N_Incoherent[iz]; i++)
+		{
+			tempF = (float*) &hardCodedTables.data[curOffset]; curOffset += sizeof(float);
+			logIncoherentCrossSections[iz][i] = *tempF;
+		}
+
+        for (int i = 0; i < N_Incoherent[iz]; i++)
+        {
+            logIncoherentCrossSections[iz][i] = log(c*logIncoherentCrossSections[iz][i]);
+            logIncoherentEnergies[iz][i] = log(IncoherentEnergies[iz][i]);
+        }
+        
+        //Coherent
+		tempI = (int*) &hardCodedTables.data[curOffset]; curOffset += sizeof(int);
+		N_Coherent[iz] = *tempI;
+
+		logCoherentCrossSections.push_back((float*)malloc(sizeof(float)*N_Coherent[iz]));
+        logCoherentEnergies.push_back((float*)malloc(sizeof(float)*N_Coherent[iz]));
+        CoherentEnergies.push_back((float*)malloc(sizeof(float)*N_Coherent[iz]));
+
+		for (int i = 0; i < N_Coherent[iz]; i++)
+		{
+			tempF = (float*) &hardCodedTables.data[curOffset]; curOffset += sizeof(float);
+			CoherentEnergies[iz][i] = *tempF;
+		}
+
+		for (int i = 0; i < N_Coherent[iz]; i++)
+		{
+			tempF = (float*) &hardCodedTables.data[curOffset]; curOffset += sizeof(float);
+			logCoherentCrossSections[iz][i] = *tempF;
+		}
+
+        for (int i = 0; i < N_Coherent[iz]; i++)
+        {
+            logCoherentCrossSections[iz][i] = log(c*logCoherentCrossSections[iz][i]);
+            logCoherentEnergies[iz][i] = log(CoherentEnergies[iz][i]);
+        }
+        
+        //Pair Production
+		tempI = (int*) &hardCodedTables.data[curOffset]; curOffset += sizeof(int);
+		N_PairProduction[iz] = *tempI;
+
+		logPairProductionCrossSections.push_back((float*)malloc(sizeof(float)*N_PairProduction[iz]));
+        logPairProductionEnergies.push_back((float*)malloc(sizeof(float)*N_PairProduction[iz]));
+        PairProductionEnergies.push_back((float*)malloc(sizeof(float)*N_PairProduction[iz]));
+
+		for (int i = 0; i < N_PairProduction[iz]; i++)
+		{
+			tempF = (float*) &hardCodedTables.data[curOffset]; curOffset += sizeof(float);
+			PairProductionEnergies[iz][i] = *tempF;
+		}
+
+		for (int i = 0; i < N_PairProduction[iz]; i++)
+		{
+			tempF = (float*) &hardCodedTables.data[curOffset]; curOffset += sizeof(float);
+			logPairProductionCrossSections[iz][i] = *tempF;
+		}
+
+        for (int i = 0; i < N_PairProduction[iz]; i++)
+        {
+            logPairProductionCrossSections[iz][i] = log(c*logPairProductionCrossSections[iz][i]);
+            logPairProductionEnergies[iz][i] = log(PairProductionEnergies[iz][i]);
+        }
+        
+        //Triplet Production
+		tempI = (int*) &hardCodedTables.data[curOffset]; curOffset += sizeof(int);
+		N_TripletProduction[iz] = *tempI;
+
+		logTripletProductionCrossSections.push_back((float*)malloc(sizeof(float)*N_TripletProduction[iz]));
+        logTripletProductionEnergies.push_back((float*)malloc(sizeof(float)*N_TripletProduction[iz]));
+        TripletProductionEnergies.push_back((float*)malloc(sizeof(float)*N_TripletProduction[iz]));
+
+		for (int i = 0; i < N_TripletProduction[iz]; i++)
+		{
+			tempF = (float*) &hardCodedTables.data[curOffset]; curOffset += sizeof(float);
+			TripletProductionEnergies[iz][i] = *tempF;
+		}
+
+		for (int i = 0; i < N_TripletProduction[iz]; i++)
+		{
+			tempF = (float*) &hardCodedTables.data[curOffset]; curOffset += sizeof(float);
+			logTripletProductionCrossSections[iz][i] = *tempF;
+		}
+
+        for (int i = 0; i < N_TripletProduction[iz]; i++)
+        {
+            logTripletProductionCrossSections[iz][i] = log(c*logTripletProductionCrossSections[iz][i]);
+            logTripletProductionEnergies[iz][i] = log(TripletProductionEnergies[iz][i]);
+        }
+    }
+    
+	return true;
+}
+
+float xsec::logInterp(float interp_energy, float low_energy, float high_energy, float low_crossSect, float high_crossSect)
+{
+    if (isinf(low_crossSect) == true)
+        return 0.0;
+    else
+    {
+        float m = (high_crossSect - low_crossSect) / (high_energy - low_energy);
+        //return exp(low_crossSect + m*(log(interp_energy) - low_energy));
+        return exp(low_crossSect + m*(interp_energy - low_energy));
+        //return low_crossSect + m*(interp_energy - low_energy);
+    }
+}
+
+float xsec::sigma(const char* chemForm, float theEnergy, int which)
+{
+    float elementCount[101];
+    for (int i = 0; i <= 100; i++) elementCount[i] = 0.0;
+    
+    // parse chemForm
+    string chemForm_str = chemForm;
+    vector<string> elementStrings = splitIntoElements(chemForm_str);
+    for (int i = 0; i < int(elementStrings.size()); i++)
+    {
+        if (elementStrings[i].size() == 0)
+            return 0.0;
+
+        string elementString = elementStrings[i];
+        string element;
+        string countStr;
+
+        if (elementString.size() == 1)
+        {
+            element = elementString;
+        }
+        else
+        {
+            if (isalpha(elementString[1]))
+            {
+                element = elementString.substr(0, 2);
+                countStr = elementString.substr(2, elementString.size()-2);
+            }
+            else
+            {
+                element = elementString.substr(0, 1);
+                countStr = elementString.substr(1, elementString.size() - 1);
+            }
+        }
+
+        int Z = elementStringToAtomicNumber(element);
+        float count = 1.0;
+        if (countStr.size() > 0)
+            count = std::stof(countStr);
+        elementCount[Z] = count;
+    }
+
+    /*
+    for (int i = 1; i <= 100; i++)
+    {
+        if (elementCount[i] > 0.0)
+            printf("%d: %f\n", i, elementCount[i]);
+    }
+    printf("energy = %f\n", theEnergy);
+    //*/
+
+    return sigma(elementCount, theEnergy, which);
+}
+
+float xsec::sigma(float* chemForm, float theEnergy, int which)
+{
+    float sumZ = 0.0;
+    float retVal = 0.0;
+    for (int i = 1; i <= 100; i++)
+    {
+        if (chemForm[i] > 0.0)
+        {
+            sumZ += chemForm[i] * atomicMass[i];
+            retVal += atomicMass[i] * chemForm[i] * sigma(i, theEnergy, which);
+        }
+    }
+    retVal /= sumZ;
+
+    return retVal;
+}
+
+float xsec::sigma(float Ze, float theEnergy, int which)
+{
+    if (fabs(Ze - floor(Ze + 0.5)) < 1.0e-8)
+        return sigma(int(floor(Ze + 0.5)), theEnergy, which);
+    int Z_lo = int(floor(Ze));
+    int Z_hi = int(ceil(Ze));
+    float dZ = Ze - float(Z_lo);
+    return (1.0 - dZ) * sigma(Z_lo, theEnergy, which) + dZ * sigma(Z_hi, theEnergy, which);
+}
+
+float xsec::sigma_e(float Ze, float theEnergy, int which)
+{
+    if (fabs(Ze - floor(Ze + 0.5)) < 1.0e-8)
+        return sigma_e(int(floor(Ze + 0.5)), theEnergy, which);
+    int Z_lo = int(floor(Ze));
+    int Z_hi = int(ceil(Ze));
+    float dZ = Ze - float(Z_lo);
+    return (1.0 - dZ) * sigma_e(Z_lo, theEnergy, which) + dZ * sigma_e(Z_hi, theEnergy, which);
+}
+
+float xsec::sigma_e(int Z, float theEnergy, int which)
+{
+    if (1 <= Z && Z <= 100)
+        return sigma(Z, theEnergy, which) * atomicMass[Z] / float(Z);
+    else
+        return 0.0;
+}
+
+float xsec::sigma(int Z, float theEnergy, int which)
+{
+    /*
+    string chemForm_str = "H2O3Al2.5";
+    vector<string> elementStrings = splitIntoElements(chemForm_str);
+    printf("elementStrings.size = %d\n", int(elementStrings.size()));
+    for (int i = 0; i < int(elementStrings.size()); i++)
+        printf("%d: %s\n", i, elementStrings[i].c_str());
+    //*/
+
+    if (logPhotoelectricCrossSections.size() == 0 || logIncoherentCrossSections.size() == 0 || logCoherentCrossSections.size() == 0 || logPairProductionCrossSections.size() == 0 || logTripletProductionCrossSections.size() == 0)
+        init();
+    
+    if (Z < 1 || Z > 100 || theEnergy < 1.0 || theEnergy > float(MAX_ENERGY))
+        return 0.0;
+    else if (theEnergy > float(MAX_XRAY_ENERGY))
+        return sigma(float(MAX_XRAY_ENERGY), Z, which)*(theEnergy+1.0-float(MAX_XRAY_ENERGY)) - sigma(float(MAX_XRAY_ENERGY-1), Z, which)*(theEnergy-float(MAX_XRAY_ENERGY));
+    int n_min = which;
+    int n_max = which;
+    if (which < 0 || which > 4)
+    {
+        n_min = 0;
+        n_max = 4;
+    }
+    
+    Z -= 1;
+    
+    float retVal = 0.0;
+    for (int n = n_min; n <= n_max; n++)
+    {
+        int N_energySamples = 0;
+        float* logCrossSection = NULL;
+        float* logEnergies = NULL;
+        float* energies = NULL;
+        switch (n)
+        {
+            case PHOTOELECTRIC:
+                N_energySamples = N_Photoelectric[Z];
+                logCrossSection = logPhotoelectricCrossSections[Z];
+                logEnergies = logPhotoelectricEnergies[Z];
+                energies = PhotoelectricEnergies[Z];
+                break;
+            case INCOHERENT:
+                N_energySamples = N_Incoherent[Z];
+                logCrossSection = logIncoherentCrossSections[Z];
+                logEnergies = logIncoherentEnergies[Z];
+                energies = IncoherentEnergies[Z];
+                break;
+            case COHERENT:
+                N_energySamples = N_Coherent[Z];
+                logCrossSection = logCoherentCrossSections[Z];
+                logEnergies = logCoherentEnergies[Z];
+                energies = CoherentEnergies[Z];
+                break;
+            case PAIRPRODUCTION:
+                N_energySamples = N_PairProduction[Z];
+                logCrossSection = logPairProductionCrossSections[Z];
+                logEnergies = logPairProductionEnergies[Z];
+                energies = PairProductionEnergies[Z];
+                break;
+            case TRIPLETPRODUCTION:
+                N_energySamples = N_TripletProduction[Z];
+                logCrossSection = logTripletProductionCrossSections[Z];
+                logEnergies = logTripletProductionEnergies[Z];
+                energies = TripletProductionEnergies[Z];
+                break;
+            default:
+                break;
+        }
+        int index = 0;
+        float interp_crossSect = 0.0;
+        for(; index < N_energySamples; index++)
+        {
+            if(theEnergy < energies[index])
+                break;
+        }
+        if (index > 0 && index < N_energySamples)
+            interp_crossSect = logInterp(log(theEnergy), logEnergies[index-1], logEnergies[index], logCrossSection[index-1], logCrossSection[index]);
+        else
+            interp_crossSect = 0.0;
+        retVal += interp_crossSect;
+    }
+    return retVal;
+}
+
+size_t xsec::findNextCapitalLetter(string str, int pos)
+{
+    for (int i = pos; i < int(str.size()); i++)
+    {
+        if (str[i] >= 'A' && str[i] <= 'Z')
+            return size_t(i);
+        //if (isupper(str[i]))
+        //    return size_t(i);
+    }
+    return string::npos;
+}
+
+vector<string> xsec::splitIntoElements(string str)
+{
+    int ntokens = 100;
+    vector<string> tokens;
+    if (str.empty())
+        return tokens;
+
+    size_t pos = findNextCapitalLetter(str, 0);
+    if (pos != 0) // first letter must be capitalized
+        return tokens;
+
+    while (1)
+    {
+        size_t nextPos = findNextCapitalLetter(str, pos+1);
+        if (nextPos == string::npos)
+        {
+            string temp = str.substr(pos, str.size() - pos);
+            tokens.push_back(temp);
+            break;
+        }
+        else
+        {
+            string temp = str.substr(pos, nextPos - pos);
+            tokens.push_back(temp);
+            pos = nextPos;
+        }
+
+        ntokens--;
+        if (ntokens <= 0)
+            break;
+    }
+
+    /*
+    size_t pos = 0;
+    size_t loc = findNextCapitalLetter(str, pos);
+
+    if (loc == string::npos)
+        return tokens;
+
+    string temp;
+    int num_tokens = 0;
+
+    while (pos != string::npos)
+    {
+        if ((loc - pos) != 0)
+        {
+            temp = str.substr(pos, loc - pos);
+            if (!temp.empty())
+            {
+                tokens.push_back(temp);
+                num_tokens++;
+            }
+        }
+
+        pos = (loc == string::npos ? loc : loc + 1);
+        loc = findNextCapitalLetter(str, pos);
+
+        if (num_tokens == ntokens - 1)
+            break;
+    }
+
+    if (pos != string::npos)
+    {
+        temp = str.substr(pos);
+        if (!temp.empty())
+        {
+            tokens.push_back(temp);
+            num_tokens++;
+        }
+    }
+    //*/
+
+    return tokens;
+}
+
+int xsec::elementStringToAtomicNumber(string str)
+{
+    for (int i = 1; i <= 100; i++)
+    {
+        //printf("%s\n", elementSymbols[i]);
+        if (strcmp(str.c_str(), elementSymbols[i]) == 0)
+            return i;
+    }
+    //exit(1);
+    return 0;
+}
+
+float xsec::sigmaPE(const char* chemForm, float theEnergy)
+{
+    return sigma(chemForm, theEnergy, PHOTOELECTRIC);
+}
+
+float xsec::sigmaPE(float Ze, float theEnergy)
+{
+    return sigma(Ze, theEnergy, PHOTOELECTRIC);
+}
+
+float xsec::sigmaPE(int Z, float theEnergy)
+{
+    return sigma(Z, theEnergy, PHOTOELECTRIC);
+}
+
+float xsec::sigmaCS(const char* chemForm, float theEnergy)
+{
+    return sigma(chemForm, theEnergy, INCOHERENT);
+}
+
+float xsec::sigmaCS(float Ze, float theEnergy)
+{
+    return sigma(Ze, theEnergy, INCOHERENT);
+}
+
+float xsec::sigmaCS(int Z, float theEnergy)
+{
+    return sigma(Z, theEnergy, INCOHERENT);
+}
+
+float xsec::sigmaRS(const char* chemForm, float theEnergy)
+{
+    return sigma(chemForm, theEnergy, COHERENT);
+}
+
+float xsec::sigmaRS(float Ze, float theEnergy)
+{
+    return sigma(Ze, theEnergy, COHERENT);
+}
+
+float xsec::sigmaRS(int Z, float theEnergy)
+{
+    return sigma(Z, theEnergy, COHERENT);
+}
+
+float xsec::sigmaPP(const char* chemForm, float theEnergy)
+{
+    return sigma(chemForm, theEnergy, PAIRPRODUCTION);
+}
+
+float xsec::sigmaPP(float Ze, float theEnergy)
+{
+    return sigma(Ze, theEnergy, PAIRPRODUCTION);
+}
+
+float xsec::sigmaPP(int Z, float theEnergy)
+{
+    return sigma(Z, theEnergy, PAIRPRODUCTION);
+}
+
+float xsec::sigmaTP(const char* chemForm, float theEnergy)
+{
+    return sigma(chemForm, theEnergy, TRIPLETPRODUCTION);
+}
+
+float xsec::sigmaTP(float Ze, float theEnergy)
+{
+    return sigma(Ze, theEnergy, TRIPLETPRODUCTION);
+}
+
+float xsec::sigmaTP(int Z, float theEnergy)
+{
+    return sigma(Z, theEnergy, TRIPLETPRODUCTION);
+}
+
+float xsec::getAtomicMass(int Z)
+{
+    if (1 <= Z && Z <= 100)
+        return atomicMass[Z];
+    else
+        return 0.0;
+}
