@@ -1,2 +1,24 @@
 # XrayPhysics
-C/C++ library and Python bindings for x-ray cross sections, x-ray source spectra modeling, multi-material beam hardening correction, and dual energy decomposition algorithms
+This is a C/C++ library and Python bindings with the following capabilities:
+1) x-ray cross sections (energies from 1 keV to 20 MeV and elements 1-100)
+2) x-ray source spectra modeling (for any source voltage and take-off angle, and the following anode types: Cu, Mo, W, Au)
+3) multi-material beam hardening correction algorithms (coming soon)
+4) dual energy decomposition algorithms (coming soon)
+
+
+## Installation and Usage
+
+Installation and usage information is posted on the wiki page here: https://github.com/kylechampley/XrayPhysics/wiki
+
+
+## Author
+Kyle Champley (champley@gmail.com)
+
+
+## License
+XrayPhysics is distributed under the terms of the MIT license. All new contributions must be made under this license. See LICENSE in this directory for the terms of the license.
+See [LICENSE](LICENSE) for more details.  
+SPDX-License-Identifier: MIT  
+
+Please cite our work by referencing this github page
+
