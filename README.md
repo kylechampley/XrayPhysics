@@ -6,6 +6,11 @@ This is a C/C++ library and Python bindings with the following capabilities:
 4) dual energy decomposition algorithms (coming soon)
 
 
+![The x-ray source models are at least as accurate as TASMICS and much more flexible.](https://github.com/kylechampley/XrayPhysics/blob/main/comparisonWithTASMICS.png)
+
+The x-ray source models are at least as accurate as TASMICS and much more flexible.
+
+
 ## Installation and Usage
 
 Installation and usage information is posted on the wiki page here: https://github.com/kylechampley/XrayPhysics/wiki
