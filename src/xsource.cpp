@@ -59,7 +59,7 @@ float* xraySource::takeOffAngleConversionFactor(float kVp_in, float takeOffAngle
         float gamma_cur = gamma(i);
         if (Z != 0 && gamma_cur > 0.0 && takeOffAngle_cur != takeOffAngle_new)
         {
-            //float theRatio = xsecTables->sigma(Z, gamma_cur) * Z_over_A / (PhilibertConstant / (kVp_e165 - pow(gamma_cur, PhilibertExponent)));
+            //float theRatio = xsecTables->sigma_e(Z, gamma_cur) * Z_over_A / (PhilibertConstant / (kVp_e165 - pow(gamma_cur, PhilibertExponent)));
             //retVal[i] = (sin_psi_out * sin_psi_out) / (sin_psi_in * sin_psi_in) * ((sin_psi_in + theRatio) * (sin_psi_in + h_factor * theRatio)) / ((sin_psi_out + theRatio) * (sin_psi_out + h_factor * theRatio));
             takeOffAngle = takeOffAngle_cur * PI / 180.0;
             float denom = PhilibertAbsorptionCorrectionFactor(gamma_cur);

@@ -21,6 +21,10 @@ class xrayPhysics:
         elif _platform == "win32":
             from ctypes import windll
             self.libxrayphysics = windll.LoadLibrary(os.path.join(current_dir, r'..\win_build\bin\Release\libxrayphysics.dll'))
+        elif _platform == "darwin":  # Darwin is the name for MacOS in Python's platform module
+            from ctypes import cdll
+            # Adjust the path to where your .dylib file is located
+            self.libxrayphysics = cdll.LoadLibrary(os.path.join(current_dir, "../build/lib/libxrayphysics.dylib"))
 
     def mu(self, Z, gamma, massDensity):
         return massDensity * self.sigma(Z, gamma)
