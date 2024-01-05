@@ -15,7 +15,7 @@ The x-ray source models are at least as accurate as TASMICS and much more flexib
 
 Installation and usage information is posted on the wiki page here: https://github.com/kylechampley/XrayPhysics/wiki
 
-Designed to be used in conjuction (by is not required) with [LEAP](https://github.com/LLNL/LEAP) 
+Designed to be used in conjuction with (but is not required) [LEAP](https://github.com/LLNL/LEAP) 
 
 ## Author
 Kyle Champley (champley@gmail.com)
