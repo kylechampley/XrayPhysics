@@ -30,6 +30,16 @@ float sigmaCompound(const char* chemForm, float gamma)
     return physics.xsecTables.sigma(chemForm, gamma);
 }
 
+float sigmae(float Z, float gamma)
+{
+    return physics.xsecTables.sigma_e(Z, gamma);
+}
+
+float sigmaeCompound(const char* chemForm, float gamma)
+{
+    return physics.xsecTables.sigma_e(chemForm, gamma);
+}
+
 float sigmaPE(float Z, float gamma)
 {
     return physics.xsecTables.sigmaPE(Z, gamma);
@@ -83,6 +93,11 @@ float sigmaCompoundTP(const char* chemForm, float gamma)
 float meanEnergy(float* spectralResponse, float* gammas, int N)
 {
     return physics.meanEnergy(spectralResponse, gammas, N);
+}
+
+float effectiveZ(const char* chemForm, float min_energy, float max_energy, float arealDensity)
+{
+    return physics.effectiveZ(chemForm, min_energy, max_energy, arealDensity);
 }
 
 float effectiveAttenuation(float Ze, float density, float thickness, float* spectralResponse, float* gammas, int N)

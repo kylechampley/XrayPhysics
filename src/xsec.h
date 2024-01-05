@@ -43,6 +43,9 @@ public:
     float sigma(const char* chemForm, float theEnergy, int which = -1);
     float sigma(float* chemForm, float theEnergy, int which = -1);
 
+    float sigma_e(const char* chemForm, float theEnergy, int which = -1);
+    float sigma_e(float* chemForm, float theEnergy, int which = -1);
+
     float sigma(float Ze, float theEnergy, int which = -1);
     float sigma_e(float Ze, float theEnergy, int which = -1);
 

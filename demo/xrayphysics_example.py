@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 from xrayphysics import *
 physics = xrayPhysics()
 
-whichPlot = 4
+whichPlot = 0
+
 
 #########################################################################################
 # Example 1: Getting linear attenuation coefficients for a compound
@@ -14,10 +15,11 @@ whichPlot = 4
 gammas = np.array(range(20,100),dtype=np.float32)+1.0
 
 # Set the LAC (mm^-1) of water and its components
-mu_water = physics.mu('H2O',gammas,1.0)
-mu_water_PE = physics.muPE('H2O',gammas,1.0)
-mu_water_CS = physics.muCS('H2O',gammas,1.0)
-mu_water_RS = physics.muRS('H2O',gammas,1.0)
+chemForm = 'H2O'
+mu_water = physics.mu(chemForm,gammas,1.0)
+mu_water_PE = physics.muPE(chemForm,gammas,1.0)
+mu_water_CS = physics.muCS(chemForm,gammas,1.0)
+mu_water_RS = physics.muRS(chemForm,gammas,1.0)
 
 # Plot results
 if whichPlot == 1:
@@ -75,10 +77,7 @@ if whichPlot == 3:
 #########################################################################################
 # Example 4: Generate BH Lookup Table
 #########################################################################################
-import time
-startTime = time.time()
 LUT, T_lac = physics.setBHlookupTable('Al', s_total, Es)
-print('Elapsed time: ' + str(time.time()-startTime) + ' s')
 LACs = np.array(range(LUT.size))*T_lac
 if whichPlot == 4:
     plt.plot(LACs, LUT, 'k-')
@@ -105,7 +104,15 @@ if whichPlot == 5:
 
 
 #########################################################################################
-# Example 5: Generate Polynomial BHC Coefficients
+# Example 6: Generate Polynomial BHC Coefficients
 #########################################################################################
 coeff = physics.polynomialBHC('Al', 2.7, s_total, Es, referenceEnergy=0.0, maxThickness=10.0, order=2)
 print(coeff)
+
+
+#########################################################################################
+# Example 7: Calculate the effective atomic number of a compound
+#########################################################################################
+chemForm = 'H2O'
+Ze = physics.effectiveZ(chemForm)
+print('effective energy of ' + str(chemForm) + ' is ' + str(Ze))

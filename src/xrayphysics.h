@@ -28,6 +28,8 @@ public:
     float transmission(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N);
     float transmission(const char* chemForm, float density, float thickness, float* spectralResponse, float* gammas, int N);
 
+    float effectiveZ(const char* chemForm, float min_energy, float max_energy, float arealDensity = 0.0);
+
     bool setBHlookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
     bool setBHlookupTable(const char* chemForm, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
 
@@ -37,6 +39,7 @@ public:
     xsec xsecTables;
     xraySource XraySourceModel;
 private:
+
     bool setBHlookupTable_helper(double* sigma_hat, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
     bool setBHClookupTable_helper(double* sigma_hat, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
 };

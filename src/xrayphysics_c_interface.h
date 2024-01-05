@@ -16,6 +16,9 @@ extern "C" XRAYPHYSICS_API bool changeTakeOffAngle(float kVp, float takeOffAngle
 extern "C" XRAYPHYSICS_API float sigma(float Z, float gamma);
 extern "C" XRAYPHYSICS_API float sigmaCompound(const char* chemForm, float gamma);
 
+extern "C" XRAYPHYSICS_API float sigmae(float Z, float gamma);
+extern "C" XRAYPHYSICS_API float sigmaeCompound(const char* chemForm, float gamma);
+
 extern "C" XRAYPHYSICS_API float sigmaPE(float Z, float gamma);
 extern "C" XRAYPHYSICS_API float sigmaCompoundPE(const char* chemForm, float gamma);
 
@@ -32,6 +35,8 @@ extern "C" XRAYPHYSICS_API float sigmaTP(float Z, float gamma);
 extern "C" XRAYPHYSICS_API float sigmaCompoundTP(const char* chemForm, float gamma);
 
 extern "C" XRAYPHYSICS_API float meanEnergy(float* spectralResponse, float* gammas, int N);
+
+extern "C" XRAYPHYSICS_API float effectiveZ(const char* chemForm, float min_energy, float max_energy, float arealDensity);
 
 extern "C" XRAYPHYSICS_API float effectiveAttenuation(float Ze, float density, float thickness, float* spectralResponse, float* gammas, int N);
 extern "C" XRAYPHYSICS_API float effectiveEnergy(float Ze, float density, float thickness, float* spectralResponse, float* gammas, int N);

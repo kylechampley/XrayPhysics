@@ -147,6 +147,155 @@ float XrayPhysics::effectiveEnergy(const char* chemForm, float density, float th
     return xsecTables.sigma_inv(chemForm, mu_eff / density);
 }
 
+float XrayPhysics::effectiveZ(const char* chemForm, float min_energy, float max_energy, float arealDensity)
+{
+    if (chemForm == NULL)
+        return 0.0;
+    if (arealDensity <= 0.0)
+        arealDensity = 2.5;
+    float c = arealDensity * xsecTables.sigma(chemForm, max_energy) / xsecTables.sigma_e(chemForm, max_energy);
+
+    //printf("arealElectronDensity = %f\n", c);
+
+    float gamma_0 = floor(min_energy);
+    int N_gamma = int(ceil(max_energy) - floor(min_energy)) + 1;
+    float* gammas = new float[N_gamma];
+    float* theWeights = new float[N_gamma];
+    float* crossSection = new float[N_gamma];
+    for (int i = 0; i < N_gamma; i++)
+    {
+        gammas[i] = float(i) + gamma_0;
+        crossSection[i] = xsecTables.sigma_e(chemForm, gammas[i]);
+        theWeights[i] = exp(-2.0 * c * crossSection[i]);
+    }
+
+    double target_dot_target = 0.0;
+    for (int j = 0; j < N_gamma; j++)
+        target_dot_target += crossSection[j] * crossSection[j] * theWeights[j];
+
+    int currentZeRange[2];
+    currentZeRange[0] = 1; currentZeRange[1] = 100;
+
+    //printf("arealDensity = %f\n", arealDensity);
+    //printf("energy range: %f to %f\n", gammas[0], gammas[N_gamma-1]);
+
+    //##############################################################################
+    float retVal = 1.0;
+    double minError = 1e12;
+    int minError_arg = currentZeRange[0];
+    double target_dot_ref = 0.0;
+    double ref_dot_ref = 0.0;
+    for (int i = currentZeRange[0]; i <= currentZeRange[1]; i++)
+    {
+        target_dot_ref = 0.0;
+        ref_dot_ref = 0.0;
+        for (int j = 0; j < N_gamma; j++)
+        {
+            double temp = xsecTables.sigma_e(i, gammas[j]);
+            target_dot_ref += crossSection[j] * temp * theWeights[j];
+            ref_dot_ref += temp * temp * theWeights[j];
+        }
+        double curError = ref_dot_ref - 2.0 * target_dot_ref + target_dot_target;
+        if (curError < minError)
+        {
+            minError = curError;
+            minError_arg = i;
+        }
+    }
+
+    if (minError_arg <= currentZeRange[0] || minError_arg >= currentZeRange[1])
+    {
+        currentZeRange[0] = 1; currentZeRange[1] = 100;
+        retVal = float(minError_arg);
+    }
+    else
+    {
+        currentZeRange[0] = 1; currentZeRange[1] = 100;
+
+        double sig1_minus_sig2_mag_sq = 0.0;
+        double target_minus_sig2_dot_sig1_minus_sig2 = 0.0;
+        for (int j = 0; j < N_gamma; j++)
+        {
+            double sig2 = xsecTables.sigma_e(minError_arg - 1, gammas[j]);
+            double sig1 = xsecTables.sigma_e(minError_arg, gammas[j]);
+
+            sig1_minus_sig2_mag_sq += (sig1 - sig2) * (sig1 - sig2) * theWeights[j];
+            target_minus_sig2_dot_sig1_minus_sig2 += theWeights[j] * (crossSection[j] - sig2) * (sig1 - sig2);
+        }
+        double denom_low = sig1_minus_sig2_mag_sq;
+        double x_low = target_minus_sig2_dot_sig1_minus_sig2 / denom_low;
+
+        sig1_minus_sig2_mag_sq = 0.0;
+        target_minus_sig2_dot_sig1_minus_sig2 = 0.0;
+        for (int j = 0; j < N_gamma; j++)
+        {
+            double sig2 = xsecTables.sigma_e(minError_arg, gammas[j]);
+            double sig1 = xsecTables.sigma_e(minError_arg + 1, gammas[j]);
+
+            sig1_minus_sig2_mag_sq += (sig1 - sig2) * (sig1 - sig2) * theWeights[j];
+            target_minus_sig2_dot_sig1_minus_sig2 += theWeights[j] * (crossSection[j] - sig2) * (sig1 - sig2);
+        }
+        double denom_high = sig1_minus_sig2_mag_sq;
+        double x_high = target_minus_sig2_dot_sig1_minus_sig2 / denom_high;
+
+        //printf("x_low = %f, x_high = %f\n", x_low, x_high);
+
+        if (x_low >= 0.0 && x_low <= 1.0)
+        {
+            if (x_high >= 0.0 && x_high <= 1.0)
+            {
+                // both are valid, choose the best one
+                float val_low = float(minError_arg - 1) + x_low;
+                float val_high = float(minError_arg) + x_high;
+
+                target_dot_ref = 0.0;
+                ref_dot_ref = 0.0;
+                for (int j = 0; j < N_gamma; j++)
+                {
+                    double temp = xsecTables.sigma_e(val_low, gammas[j]);
+                    target_dot_ref += crossSection[j] * temp * theWeights[j];
+                    ref_dot_ref += temp * temp * theWeights[j];
+                }
+                double curError_below = ref_dot_ref - 2.0 * target_dot_ref + target_dot_target;
+
+                target_dot_ref = 0.0;
+                ref_dot_ref = 0.0;
+                for (int j = 0; j < N_gamma; j++)
+                {
+                    double temp = xsecTables.sigma_e(val_high, gammas[j]);
+                    target_dot_ref += crossSection[j] * temp * theWeights[j];
+                    ref_dot_ref += temp * temp * theWeights[j];
+                }
+                double curError_above = ref_dot_ref - 2.0 * target_dot_ref + target_dot_target;
+
+                if (curError_below < curError_above)
+                    retVal = val_low;
+                else
+                    retVal = val_high;
+            }
+            else
+            {
+                retVal = float(minError_arg - 1) + x_low;
+            }
+        }
+        else if (x_high >= 0.0 && x_high <= 1.0)
+        {
+            retVal = float(minError_arg) + x_high;
+        }
+        else
+        {
+            retVal = float(minError_arg);
+        }
+    }
+    //##############################################################################
+
+    delete[] gammas;
+    delete[] crossSection;
+    delete[] theWeights;
+
+    return retVal;
+}
+
 float XrayPhysics::transmission(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N)
 {
     if (spectralResponse == NULL || gammas == NULL || N <= 0)

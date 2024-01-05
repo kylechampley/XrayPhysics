@@ -434,6 +434,81 @@ float xsec::sigma(float* chemForm, float theEnergy, int which)
     return retVal;
 }
 
+//####
+float xsec::sigma_e(const char* chemForm, float theEnergy, int which)
+{
+    float elementCount[101];
+    for (int i = 0; i <= 100; i++) elementCount[i] = 0.0;
+
+    // parse chemForm
+    string chemForm_str = chemForm;
+    vector<string> elementStrings = splitIntoElements(chemForm_str);
+    for (int i = 0; i < int(elementStrings.size()); i++)
+    {
+        if (elementStrings[i].size() == 0)
+            return 0.0;
+
+        string elementString = elementStrings[i];
+        string element;
+        string countStr;
+
+        if (elementString.size() == 1)
+        {
+            element = elementString;
+        }
+        else
+        {
+            if (isalpha(elementString[1]))
+            {
+                element = elementString.substr(0, 2);
+                countStr = elementString.substr(2, elementString.size() - 2);
+            }
+            else
+            {
+                element = elementString.substr(0, 1);
+                countStr = elementString.substr(1, elementString.size() - 1);
+            }
+        }
+
+        int Z = elementStringToAtomicNumber(element);
+        float count = 1.0;
+        if (countStr.size() > 0)
+            count = std::stof(countStr);
+        elementCount[Z] = count;
+    }
+
+    /*
+    for (int i = 1; i <= 100; i++)
+    {
+        if (elementCount[i] > 0.0)
+            printf("%d: %f\n", i, elementCount[i]);
+    }
+    printf("energy = %f\n", theEnergy);
+    //*/
+
+    return sigma_e(elementCount, theEnergy, which);
+}
+
+float xsec::sigma_e(float* chemForm, float theEnergy, int which)
+{
+    float sumZ = 0.0;
+    float retVal = 0.0;
+    for (int i = 1; i <= 100; i++)
+    {
+        if (chemForm[i] > 0.0)
+        {
+            //sumZ += chemForm[i] * atomicMass[i];
+            //retVal += atomicMass[i] * chemForm[i] * sigma_e(i, theEnergy, which);
+            sumZ += chemForm[i] * float(i);
+            retVal += float(i) * chemForm[i] * sigma_e(i, theEnergy, which);
+        }
+    }
+    retVal /= sumZ;
+
+    return retVal;
+}
+//####
+
 float xsec::sigma(float Ze, float theEnergy, int which)
 {
     if (fabs(Ze - floor(Ze + 0.5)) < 1.0e-8)

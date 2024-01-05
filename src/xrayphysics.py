@@ -68,6 +68,39 @@ class xrayPhysics:
                 return retVal
             else:
                 return self.libxrayphysics.sigma(Z, gamma)
+                
+    def sigma_e(self, Z, gamma):
+        if isinstance(Z, str):
+            chemicalFormula = Z
+            if sys.version_info[0] == 3:
+                chemicalFormula = bytes(str(chemicalFormula), 'ascii')
+            self.libxrayphysics.sigmaeCompound.restype = ctypes.c_float
+            self.libxrayphysics.sigmaeCompound.argtypes = [ctypes.c_char_p, ctypes.c_float]
+            if type(gamma) is np.ndarray:
+                retVal = gamma.copy()
+                for n in range(gamma.size):
+                    retVal[n] = self.libxrayphysics.sigmaeCompound(chemicalFormula, float(gamma[n]))
+                return retVal
+            else:
+                return self.libxrayphysics.sigmaeCompound(chemicalFormula, float(gamma))
+        else:
+            self.libxrayphysics.sigmae.argtypes = [ctypes.c_float, ctypes.c_float]
+            self.libxrayphysics.sigmae.restype = ctypes.c_float
+            if type(gamma) is np.ndarray:
+                retVal = gamma.copy()
+                for n in range(gamma.size):
+                    retVal[n] = self.libxrayphysics.sigmae(Z, float(gamma[n]))
+                return retVal
+            else:
+                return self.libxrayphysics.sigmae(Z, gamma)
+
+    def rhoe(self, Z, massDensity):
+        #massDensity * sigma = rhoe*sigma_e
+        return massDensity * self.sigma(Z, 1.0) / self.sigma_e(Z, 1.0)
+        
+    def rho(self, Z, electronDensity):
+        #rho * sigma = rhoe*sigma_e
+        return electronDensity * self.sigma_e(Z, 1.0) / self.sigma(Z, 1.0)
         
     def sigmaPE(self, Z, gamma):
         if isinstance(Z, str):
@@ -233,6 +266,18 @@ class xrayPhysics:
         self.libxrayphysics.meanEnergy.restype = ctypes.c_float
         self.libxrayphysics.meanEnergy.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
         return self.libxrayphysics.meanEnergy(spectralResponse, gammas, gammas.size)
+        
+    def effectiveZ(self, chemicalFormula, min_energy=10.0, max_energy=100.0, arealDensity=0.0):
+        if isinstance(chemicalFormula, str):
+            if sys.version_info[0] == 3:
+                chemicalFormula = bytes(str(chemicalFormula), 'ascii')
+            #float effectiveZ(const char* chemForm, float min_energy, float max_energy, float arealDensity);
+            self.libxrayphysics.effectiveZ.restype = ctypes.c_float
+            self.libxrayphysics.effectiveZ.argtypes = [ctypes.c_char_p, ctypes.c_float, ctypes.c_float, ctypes.c_float]
+            return self.libxrayphysics.effectiveZ(chemicalFormula, min_energy, max_energy, arealDensity)
+        else:
+            print('Error: first argument must be a chemical formula string')
+            return 0.0
         
     def effectiveAttenuation(self, Z, density, thickness, spectralResponse, gammas):
         #float effectiveAttenuation(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N);
