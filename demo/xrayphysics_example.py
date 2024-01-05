@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from xrayphysics import *
 physics = xrayPhysics()
 
-whichPlot = -1
+whichPlot = 4
 
 #########################################################################################
 # Example 1: Getting linear attenuation coefficients for a compound
@@ -73,14 +73,30 @@ if whichPlot == 3:
 
 
 #########################################################################################
-# Example 4: Generate BHC Lookup Table
+# Example 4: Generate BH Lookup Table
+#########################################################################################
+import time
+startTime = time.time()
+LUT, T_lac = physics.setBHlookupTable('Al', s_total, Es)
+print('Elapsed time: ' + str(time.time()-startTime) + ' s')
+LACs = np.array(range(LUT.size))*T_lac
+if whichPlot == 4:
+    plt.plot(LACs, LUT, 'k-')
+    #plt.title('Effective Energy (keV)')
+    plt.xlabel('LAC (cm^-1)')
+    #plt.ylabel('normalized response (unitless)')
+    plt.show()
+    
+
+#########################################################################################
+# Example 5: Generate BHC Lookup Table
 #########################################################################################
 import time
 startTime = time.time()
 LUT, T_lac = physics.setBHClookupTable('Al', s_total, Es)
 print('Elapsed time: ' + str(time.time()-startTime) + ' s')
 LACs = np.array(range(LUT.size))*T_lac
-if whichPlot == 4:
+if whichPlot == 5:
     plt.plot(LACs, LUT, 'k-')
     #plt.title('Effective Energy (keV)')
     plt.xlabel('LAC (cm^-1)')

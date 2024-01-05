@@ -276,6 +276,35 @@ class xrayPhysics:
             self.libxrayphysics.transmission.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
             return self.libxrayphysics.transmission(Z, density, thickness, spectralResponse, gammas, gammas.size)
             
+    def setBHlookupTable(self, Z, spectralResponse, gammas, T_lac=0.0, N_lac=0, referenceEnergy=0.0):
+        if N_lac <= 0 or T_lac <= 0.0:
+            max_lac = 48.0
+            #T_lac = 2.0e-4 # about 0.06MB; 14 counts on a 16-bit detector
+            T_lac = 1.0e-4 # about 0.12MB
+            #T_lac = 1.0e-5 # about 1.2MB
+            #T_lac = 1.0e-6 # about 12MB
+            N_lac = int(np.ceil(max_lac / T_lac)) + 1
+            max_lac = float(N_lac-1)*T_lac
+        
+        N_gamma = gammas.size
+        if referenceEnergy <= 0.0:
+            #referenceEnergy = self.meanEnergy(spectralResponse, gammas)
+            referenceEnergy = self.effectiveEnergy(Z, 1.0, 0.0, spectralResponse, gammas)
+            print('referenceEnergy = ' + str(referenceEnergy))
+        LUT = np.zeros(N_lac, dtype=np.float32)
+        if isinstance(Z, str):
+            chemicalFormula = Z
+            if sys.version_info[0] == 3:
+                chemicalFormula = bytes(str(chemicalFormula), 'ascii')
+            self.libxrayphysics.setBHlookupTable_compound.restype = ctypes.c_bool
+            self.libxrayphysics.setBHlookupTable_compound.argtypes = [ctypes.c_char_p, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_float, ctypes.c_int, ctypes.c_float]
+            self.libxrayphysics.setBHlookupTable_compound(chemicalFormula, spectralResponse, gammas, N_gamma, LUT, T_lac, N_lac, referenceEnergy)
+        else:
+            self.libxrayphysics.setBHlookupTable.restype = ctypes.c_bool
+            self.libxrayphysics.setBHlookupTable.argtypes = [ctypes.c_float, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_float, ctypes.c_int, ctypes.c_float]
+            self.libxrayphysics.setBHlookupTable(Z, spectralResponse, gammas, N_gamma, LUT, T_lac, N_lac, referenceEnergy)
+        return LUT, T_lac
+
     def setBHClookupTable(self, Z, spectralResponse, gammas, T_lac=0.0, N_lac=0, referenceEnergy=0.0):
         #bool setBHClookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
         

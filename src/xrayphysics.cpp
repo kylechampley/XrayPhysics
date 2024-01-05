@@ -318,3 +318,87 @@ bool XrayPhysics::setBHClookupTable(const char* chemForm, float* spectralRespons
     delete[] sigma_hat;
     return retVal;
 }
+
+bool XrayPhysics::setBHlookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy)
+{
+    if (spectralResponse == NULL || gammas == NULL || N_gamma <= 0)
+        return false;
+    if (LUT == NULL || T_lac <= 0.0 || N_lac <= 0)
+        return false;
+
+    double* sigma_hat = new double[N_gamma];
+    double sigma_refE = xsecTables.sigma(Ze, referenceEnergy);
+    for (int i = 0; i < N_gamma; i++)
+        sigma_hat[i] = xsecTables.sigma(Ze, gammas[i]) / sigma_refE;
+
+    bool retVal = setBHlookupTable_helper(sigma_hat, spectralResponse, gammas, N_gamma, LUT, T_lac, N_lac, referenceEnergy);
+
+    delete[] sigma_hat;
+    return retVal;
+}
+
+bool XrayPhysics::setBHlookupTable(const char* chemForm, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy)
+{
+    if (spectralResponse == NULL || gammas == NULL || N_gamma <= 0)
+        return false;
+    if (LUT == NULL || T_lac <= 0.0 || N_lac <= 0)
+        return false;
+
+    double* sigma_hat = new double[N_gamma];
+    double sigma_refE = xsecTables.sigma(chemForm, referenceEnergy);
+    for (int i = 0; i < N_gamma; i++)
+        sigma_hat[i] = xsecTables.sigma(chemForm, gammas[i]) / sigma_refE;
+
+    //printf("referenceEnergy = %f, sigma_refE = %f\n", referenceEnergy, sigma_refE);
+
+    bool retVal = setBHlookupTable_helper(sigma_hat, spectralResponse, gammas, N_gamma, LUT, T_lac, N_lac, referenceEnergy);
+
+    delete[] sigma_hat;
+    return retVal;
+}
+
+bool XrayPhysics::setBHlookupTable_helper(double* sigma_hat, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy)
+{
+    if (spectralResponse == NULL || gammas == NULL || N_gamma <= 0)
+        return false;
+    if (LUT == NULL || T_lac <= 0.0 || N_lac <= 0)
+        return false;
+
+    double* d = new double[N_gamma];
+    double accum = 0.0;
+    for (int i = 0; i < N_gamma; i++)
+    {
+        double T_phi;
+        if (i == 0)
+            T_phi = gammas[i + 1] - gammas[i];
+        else if (i == N_gamma - 1)
+            T_phi = gammas[i] - gammas[i - 1];
+        else
+            T_phi = 0.5 * (gammas[i + 1] - gammas[i - 1]);
+
+        d[i] = T_phi * spectralResponse[i];
+        accum += T_phi * spectralResponse[i];
+    }
+    for (int i = 0; i < N_gamma; i++)
+        d[i] = d[i] / accum;
+
+    bool retVal = true;
+
+    int N_iter = 10;
+    double tol = 1.0e-7;
+
+    LUT[0] = 0.0;
+    for (int i = 1; i < N_lac; i++)
+    {
+        double curLAC = double(i) * T_lac;
+        double accum = 0.0;
+        for (int l = 0; l < N_gamma; l++)
+        {
+            accum += d[l]*exp(-sigma_hat[l] * curLAC);
+        }
+        LUT[i] = -log(accum);
+        //printf("%f => %f\n", curLAC, LUT[i]);
+    }
+    delete[] d;
+    return retVal;
+}

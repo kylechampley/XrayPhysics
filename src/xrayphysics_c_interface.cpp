@@ -115,6 +115,16 @@ float transmission_compound(const char* chemForm, float density, float thickness
     return physics.transmission(chemForm, density, thickness, spectralResponse, gammas, N);
 }
 
+bool setBHlookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy)
+{
+    return physics.setBHlookupTable(Ze, spectralResponse, gammas, N_gamma, LUT, T_lac, N_lac, referenceEnergy);
+}
+
+bool setBHlookupTable_compound(const char* chemForm, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy)
+{
+    return physics.setBHlookupTable(chemForm, spectralResponse, gammas, N_gamma, LUT, T_lac, N_lac, referenceEnergy);
+}
+
 bool setBHClookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy)
 {
     return physics.setBHClookupTable(Ze, spectralResponse, gammas, N_gamma, LUT, T_lac, N_lac, referenceEnergy);
