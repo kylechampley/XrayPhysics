@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from xrayphysics import *
 physics = xrayPhysics()
 
+whichPlot = -1
 
 #########################################################################################
 # Example 1: Getting linear attenuation coefficients for a compound
@@ -19,12 +20,13 @@ mu_water_CS = physics.muCS('H2O',gammas,1.0)
 mu_water_RS = physics.muRS('H2O',gammas,1.0)
 
 # Plot results
-plt.plot(gammas,mu_water,gammas,mu_water_PE,gammas,mu_water_CS,gammas,mu_water_RS)
-plt.title('Water LAC')
-plt.xlabel('x-ray energy (keV)')
-plt.ylabel('linear attenuation coefficient (mm^-1)')
-plt.legend(['total','Photoelectric','Compton Scatter','Rayleigh Scatter'])
-plt.show()
+if whichPlot == 1:
+    plt.plot(gammas,mu_water,gammas,mu_water_PE,gammas,mu_water_CS,gammas,mu_water_RS)
+    plt.title('Water LAC')
+    plt.xlabel('x-ray energy (keV)')
+    plt.ylabel('linear attenuation coefficient (cm^-1)')
+    plt.legend(['total','Photoelectric','Compton Scatter','Rayleigh Scatter'])
+    plt.show()
 
 
 #########################################################################################
@@ -47,8 +49,47 @@ filtResp = physics.filterResponse('Al', 2.7, 0.1, Es)
 # Take the product of all three factors
 s_total = s*filtResp*detResp
 
-plt.plot(Es, s_total/np.sum(s_total), 'k-')
-plt.title('Total System Spectral Response')
-plt.xlabel('x-ray energy (keV)')
-plt.ylabel('normalized response (unitless)')
-plt.show()
+if whichPlot == 2:
+    plt.plot(Es, s_total/np.sum(s_total), 'k-')
+    plt.title('Total System Spectral Response')
+    plt.xlabel('x-ray energy (keV)')
+    plt.ylabel('normalized response (unitless)')
+    plt.show()
+
+
+#########################################################################################
+# Example 3: Effective Energy Through a Material of Variable Thickness
+#########################################################################################
+thicknesses = np.array(range(26))/10.0
+e_effs = thicknesses.copy()
+for n in range(thicknesses.size):
+    e_effs[n] = physics.effectiveEnergy('H2O', 1.0, thicknesses[n], s_total, Es)
+if whichPlot == 3:
+    plt.plot(thicknesses, e_effs, 'k-')
+    plt.title('Effective Energy (keV)')
+    plt.xlabel('thickness (cm)')
+    plt.ylabel('LAC (mm^-1)')
+    plt.show()
+
+
+#########################################################################################
+# Example 4: Generate BHC Lookup Table
+#########################################################################################
+import time
+startTime = time.time()
+LUT, T_lac = physics.setBHClookupTable('Al', s_total, Es)
+print('Elapsed time: ' + str(time.time()-startTime) + ' s')
+LACs = np.array(range(LUT.size))*T_lac
+if whichPlot == 4:
+    plt.plot(LACs, LUT, 'k-')
+    #plt.title('Effective Energy (keV)')
+    plt.xlabel('LAC (cm^-1)')
+    #plt.ylabel('normalized response (unitless)')
+    plt.show()
+
+
+#########################################################################################
+# Example 5: Generate Polynomial BHC Coefficients
+#########################################################################################
+coeff = physics.polynomialBHC('Al', 2.7, s_total, Es, referenceEnergy=0.0, maxThickness=10.0, order=2)
+print(coeff)

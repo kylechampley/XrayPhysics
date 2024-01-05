@@ -13,6 +13,16 @@ const float atomicMass[101] = {0.0, 1.008000e+00, 4.002600e+00, 6.939000e+00, 9.
 														  2.043700e+02, 2.071900e+02, 2.089800e+02, 2.090000e+02, 2.100000e+02, 2.220000e+02, 2.230000e+02, 2.260000e+02, 2.270000e+02, 2.320400e+02,
 														  2.330000e+02, 2.380500e+02, 2.370000e+02, 2.390500e+02, 2.420000e+02, 2.470000e+02, 2.470000e+02, 2.510000e+02, 2.520000e+02, 2.570000e+02};
 
+const float electronDensities[101] = { 0.0, 8.916666e-05, 8.919202e-05, 2.308690e-01, 8.202215e-01, 1.096106e+00, 1.131463e+00, 6.249875e-04, 7.145447e-04, 8.034530e-04, 4.459586e-04,
+                                                                4.645933e-01, 8.588351e-01, 1.300337e+00, 1.161433e+00, 1.065410e+00, 1.032934e+00, 1.541139e-03, 8.037098e-04, 4.188532e-01, 7.734530e-01,
+                                                                1.396170e+00, 2.085177e+00, 2.758627e+00, 3.314101e+00, 3.385635e+00, 3.665801e+00, 4.077512e+00, 4.245546e+00, 4.089392e+00, 3.273520e+00,
+                                                                2.625129e+00, 2.346549e+00, 2.523825e+00, 1.937690e+00, 3.324407e-03, 1.603675e-03, 6.632034e-01, 1.101575e+00, 1.960418e+00, 2.852883e+00,
+                                                                3.781995e+00, 4.474046e+00, 4.994949e+00, 5.369125e+00, 5.426586e+00, 5.196617e+00, 4.574951e+00, 3.693950e+00, 3.119578e+00, 3.079451e+00,
+                                                                2.802801e+00, 2.542947e+00, 2.059023e+00, 2.421158e-03, 7.750733e-01, 1.427115e+00, 2.525218e+00, 2.755538e+00, 2.809524e+00, 2.870216e+00,
+                                                                3.037379e+00, 3.076289e+00, 2.173657e+00, 3.215425e+00, 3.365750e+00, 3.472615e+00, 3.572819e+00, 3.685807e+00, 3.807193e+00, 2.722492e+00,
+                                                                3.996565e+00, 5.369040e+00, 6.718662e+00, 7.768289e+00, 8.466703e+00, 9.018507e+00, 8.981998e+00, 8.576042e+00, 7.748794e+00, 5.402463e+00,
+                                                                4.645105e+00, 4.492012e+00, 3.871189e+00, 3.745837e+00, 3.642857e+00, 3.769279e-03, 1.950673e+00, 1.946903e+00, 3.948150e+00, 4.545768e+00,
+                                                                6.002875e+00, 7.323672e+00, 7.946203e+00, 7.801548e+00, 5.366322e+00, 5.250850e+00, 5.497976e+00, 5.466135e+00, 5.500000e+00, 5.447471e+00 };
 
 const char elementSymbols[101][3] = { {'-'},{'H'},{'H','e'},{'L','i'},{'B','e'},{'B'},{'C'},{'N'},{'O'},{'F'},{'N','e'},{'N','a'},{'M','g'},{'A','l'},{'S','i'},{'P'},{'S'},{'C','l'},{'A','r'},{'K'},{'C','a'},
                       {'S','c'},{'T','i'},{'V'},{'C','r'},{'M','n'},{'F','e'},{'C','o'},{'N','i'},{'C','u'},{'Z','n'},{'G','a'},{'G','e'},{'A','s'},{'S','e'},{'B','r'},{'K','r'},{'R','b'},{'S','r'},{'Y'},{'Z','r'},
@@ -711,10 +721,95 @@ float xsec::sigmaTP(int Z, float theEnergy)
     return sigma(Z, theEnergy, TRIPLETPRODUCTION);
 }
 
+float xsec::mu(int Z, float theEnergy, int which)
+{
+    return sigma(Z, theEnergy, which) * getMassDensity(Z);
+}
+
 float xsec::getAtomicMass(int Z)
 {
     if (1 <= Z && Z <= 100)
         return atomicMass[Z];
     else
         return 0.0;
+}
+
+float xsec::getMassDensity(int Z)
+{
+    //sigma_e = sigma * atomicMass[Z] / float(Z)
+    //rho_e sigma_e = rho sigma
+    // rho = rho_e sigma_e / sigma
+    // rho = rho_e atomicMass[Z] / float(Z)
+    if (1 <= Z && Z <= 100)
+        return electronDensities[Z] * atomicMass[Z] / float(Z);
+    else
+        return 0.0;
+}
+
+float xsec::getElectronDensity(int Z)
+{
+    if (1 <= Z && Z <= 100)
+        return electronDensities[Z];
+    else
+        return 0.0;
+}
+
+float xsec::sigma_inv(const char* chemForm, float val, int which)
+{
+    float sigma_cur = sigma(chemForm, float(1), which);
+    if (val >= sigma_cur)
+        return 1.0;
+    float sigma_next = sigma_cur;
+    for (int i = 1; i < MAX_XRAY_ENERGY; i++)
+    {
+        sigma_next = sigma(chemForm, float(i+1), which);
+        if (sigma_cur >= val && val >= sigma_next)
+        {
+            float d = (sigma_cur - val) / (sigma_cur - sigma_next);
+            return float(i) + d;
+        }
+
+        sigma_cur = sigma_next;
+    }
+    return float(MAX_XRAY_ENERGY);
+}
+
+float xsec::sigma_inv(float Ze, float val, int which)
+{
+    float sigma_cur = sigma(Ze, float(1), which);
+    if (val >= sigma_cur)
+        return 1.0;
+    float sigma_next = sigma_cur;
+    for (int i = 1; i < MAX_XRAY_ENERGY; i++)
+    {
+        sigma_next = sigma(Ze, float(i + 1), which);
+        if (sigma_cur >= val && val >= sigma_next)
+        {
+            float d = (sigma_cur - val) / (sigma_cur - sigma_next);
+            return float(i) + d;
+        }
+
+        sigma_cur = sigma_next;
+    }
+    return float(MAX_XRAY_ENERGY);
+}
+
+float xsec::sigma_inv(int Z, float val, int which)
+{
+    float sigma_cur = sigma(Z, float(1), which);
+    if (val >= sigma_cur)
+        return 1.0;
+    float sigma_next = sigma_cur;
+    for (int i = 1; i < MAX_XRAY_ENERGY; i++)
+    {
+        sigma_next = sigma(Z, float(i + 1), which);
+        if (sigma_cur >= val && val >= sigma_next)
+        {
+            float d = (sigma_cur - val) / (sigma_cur - sigma_next);
+            return float(i) + d;
+        }
+
+        sigma_cur = sigma_next;
+    }
+    return float(MAX_XRAY_ENERGY);
 }

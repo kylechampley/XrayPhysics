@@ -59,6 +59,8 @@ private:
     float gamma(int);
     float gamma_inv(float);
 
+    float massDensity();
+
 	float PhilibertConstant;
 	float PhilibertExponent;
     

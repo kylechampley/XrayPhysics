@@ -70,7 +70,15 @@ public:
     float sigmaTP(float Ze, float theEnergy);
     float sigmaTP(int Z, float theEnergy);
 
+    float mu(int Z, float theEnergy, int which = -1);
+
+    float sigma_inv(const char* chemForm, float val, int which = -1);
+    float sigma_inv(float Ze, float val, int which = -1);
+    float sigma_inv(int Z, float val, int which = -1);
+
     float getAtomicMass(int Z);
+    float getMassDensity(int Z);
+    float getElectronDensity(int Z);
 
     enum CROSS_SECTION_TYPE_LIST {PHOTOELECTRIC=0, INCOHERENT=1, COHERENT=2, PAIRPRODUCTION=3, TRIPLETPRODUCTION=4};
     

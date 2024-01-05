@@ -13,6 +13,7 @@ if (WIN32)
 endif()
 
 set(HEADER
+  xrayphysics.h
   xsec.h
   xrayphysics_c_interface.h
   xsec_raw.h
@@ -20,6 +21,7 @@ set(HEADER
 )
 
 set(SRC_CPP
+  xrayphysics.cpp
   xsec.cpp
   xrayphysics_c_interface.cpp
   xsec_raw.cpp

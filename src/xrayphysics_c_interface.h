@@ -30,3 +30,17 @@ extern "C" XRAYPHYSICS_API float sigmaCompoundPP(const char* chemForm, float gam
 
 extern "C" XRAYPHYSICS_API float sigmaTP(float Z, float gamma);
 extern "C" XRAYPHYSICS_API float sigmaCompoundTP(const char* chemForm, float gamma);
+
+extern "C" XRAYPHYSICS_API float meanEnergy(float* spectralResponse, float* gammas, int N);
+
+extern "C" XRAYPHYSICS_API float effectiveAttenuation(float Ze, float density, float thickness, float* spectralResponse, float* gammas, int N);
+extern "C" XRAYPHYSICS_API float effectiveEnergy(float Ze, float density, float thickness, float* spectralResponse, float* gammas, int N);
+
+extern "C" XRAYPHYSICS_API float effectiveAttenuation_compound(const char* chemForm, float density, float thickness, float* spectralResponse, float* gammas, int N);
+extern "C" XRAYPHYSICS_API float effectiveEnergy_compound(const char* chemForm, float density, float thickness, float* spectralResponse, float* gammas, int N);
+
+extern "C" XRAYPHYSICS_API float transmission(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N);
+extern "C" XRAYPHYSICS_API float transmission_compound(const char* chemForm, float density, float thickness, float* spectralResponse, float* gammas, int N);
+
+extern "C" XRAYPHYSICS_API bool setBHClookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
+extern "C" XRAYPHYSICS_API bool setBHClookupTable_compound(const char* chemForm, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);

@@ -47,20 +47,11 @@ float* xraySource::takeOffAngleConversionFactor(float kVp_in, float takeOffAngle
         return retVal;
     }
 
-    float sin_psi_in = sin(takeOffAngle_cur * PI / 180.0);
-    float sin_psi_out = sin(takeOffAngle_new * PI / 180.0);
-    float h_local = 1.2 * xsecTables->getAtomicMass(Z) / float(Z * Z);
-    float h_factor = h_local / (1.0 + h_local);
-
-    float Z_over_A = float(Z) / xsecTables->getAtomicMass(Z);
-    float kVp_e165 = pow(kVp, PhilibertExponent);
     for (int i = 0; i < N; i++)
     {
         float gamma_cur = gamma(i);
         if (Z != 0 && gamma_cur > 0.0 && takeOffAngle_cur != takeOffAngle_new)
         {
-            //float theRatio = xsecTables->sigma_e(Z, gamma_cur) * Z_over_A / (PhilibertConstant / (kVp_e165 - pow(gamma_cur, PhilibertExponent)));
-            //retVal[i] = (sin_psi_out * sin_psi_out) / (sin_psi_in * sin_psi_in) * ((sin_psi_in + theRatio) * (sin_psi_in + h_factor * theRatio)) / ((sin_psi_out + theRatio) * (sin_psi_out + h_factor * theRatio));
             takeOffAngle = takeOffAngle_cur * PI / 180.0;
             float denom = PhilibertAbsorptionCorrectionFactor(gamma_cur);
             takeOffAngle = takeOffAngle_new * PI / 180.0;
@@ -327,10 +318,9 @@ float xraySource::muTotal(float theEnergy)
 float* xraySource::muTotal(float* Es, int N_E)
 {
     float* mus = (float*) malloc(sizeof(float)*N_E);
-    float Z_over_A = float(Z) / xsecTables->getAtomicMass(Z);
-    
+
     for (int i = 0; i < N_E; i++)
-        mus[i] = xsecTables->sigma_e(Z, Es[i]) * Z_over_A;
+        mus[i] = muTotal(Es[i]);
     
     return mus;
 }
@@ -566,7 +556,7 @@ float xraySource::muTotal_jkl(int j, int k, int l)
                 retVal = 682.347;
         }
     }
-    else if (j == 2)
+    else if (j == 2) // W
     {
         if (k == 0)
         {
@@ -778,4 +768,10 @@ float xraySource::gamma_inv(float val)
     }
         
     return float(N-1);
+}
+
+float xraySource::massDensity()
+{
+    //return 1.0;
+    return xsecTables->getMassDensity(Z);
 }
