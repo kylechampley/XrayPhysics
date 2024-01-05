@@ -24,7 +24,7 @@ elif _platform == "darwin":
     os.system(r'sh ./etc/build.sh')
 
 setup(
-    name='leapct',
+    name='xrayphysics',
     version='0.2', 
     author='Kyle Champley', 
     author_email='champley@gmail.com', 
