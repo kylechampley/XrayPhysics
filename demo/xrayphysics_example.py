@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from xrayphysics import *
 physics = xrayPhysics()
 
-whichPlot = 0
+whichPlot = 4
 
 
 #########################################################################################
@@ -14,7 +14,7 @@ whichPlot = 0
 # Set a numpy array of the x-ray energies
 gammas = np.array(range(20,100),dtype=np.float32)+1.0
 
-# Set the LAC (mm^-1) of water and its components
+# Set the LAC (cm^-1) of water and its components
 chemForm = 'H2O'
 mu_water = physics.mu(chemForm,gammas,1.0)
 mu_water_PE = physics.muPE(chemForm,gammas,1.0)
@@ -70,20 +70,20 @@ if whichPlot == 3:
     plt.plot(thicknesses, e_effs, 'k-')
     plt.title('Effective Energy (keV)')
     plt.xlabel('thickness (cm)')
-    plt.ylabel('LAC (mm^-1)')
+    plt.ylabel('LAC (cm^-1)')
     plt.show()
 
 
 #########################################################################################
 # Example 4: Generate BH Lookup Table
 #########################################################################################
-LUT, T_lac = physics.setBHlookupTable('Al', s_total, Es)
-LACs = np.array(range(LUT.size))*T_lac
+LUT, T_lut = physics.setBHlookupTable('Al', s_total, Es)
+monoAttens = np.array(range(LUT.size))*T_lut
 if whichPlot == 4:
-    plt.plot(LACs, LUT, 'k-')
-    #plt.title('Effective Energy (keV)')
-    plt.xlabel('LAC (cm^-1)')
-    #plt.ylabel('normalized response (unitless)')
+    plt.plot(monoAttens, LUT, 'k-')
+    plt.title('Beam Hardening Transfer Function')
+    plt.xlabel('monochromatic attenuation (unitless)')
+    plt.ylabel('polychromatic attenuation (unitless)')
     plt.show()
     
 
@@ -91,15 +91,13 @@ if whichPlot == 4:
 # Example 5: Generate BHC Lookup Table
 #########################################################################################
 import time
-startTime = time.time()
-LUT, T_lac = physics.setBHClookupTable('Al', s_total, Es)
-print('Elapsed time: ' + str(time.time()-startTime) + ' s')
-LACs = np.array(range(LUT.size))*T_lac
+LUT, T_lut = physics.setBHClookupTable('Al', s_total, Es)
+polyAttens = np.array(range(LUT.size))*T_lut
 if whichPlot == 5:
-    plt.plot(LACs, LUT, 'k-')
-    #plt.title('Effective Energy (keV)')
-    plt.xlabel('LAC (cm^-1)')
-    #plt.ylabel('normalized response (unitless)')
+    plt.plot(polyAttens, LUT, 'k-')
+    plt.title('Beam Hardening Correction Transfer Function')
+    plt.xlabel('polychromatic attenuation (unitless)')
+    plt.ylabel('monochromatic attenuation (unitless)')
     plt.show()
 
 
