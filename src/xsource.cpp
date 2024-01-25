@@ -105,8 +105,8 @@ float* xraySource::simulateSpectra(float kVp_in, float takeOffAngle_in, int Z_in
     int ind = 0;
 
     float Emin = energies[0];
-    float Eo = energies[N-1];
-    //float Eo = kVp;
+    //float Eo = energies[N-1];
+    float Eo = kVp;
     //float dE = (Eo - Emin)/float(N_gamma-1);
     for (int k = 0; k < 2; k++)
     {
@@ -126,8 +126,8 @@ float* xraySource::simulateSpectra(float kVp_in, float takeOffAngle_in, int Z_in
 
     if (numLines > 0)
     {
-        float eMin = energies[0];
-        float eMax = energies[N-1];
+        //float eMin = energies[0];
+        //float eMax = energies[N-1];
         //float dE = (eMax-eMin) / float(N-1);
         for (int j = 0; j < numLines; j++)
         {
@@ -136,6 +136,7 @@ float* xraySource::simulateSpectra(float kVp_in, float takeOffAngle_in, int Z_in
 
             if (Z == 74)
             {
+                //printf("kV = %f, amp(before) = %f\n", kVp, amp);
                 if (numLines == 1)
                     amp *= 0.3;
                 else if (numLines == 2)
@@ -152,10 +153,12 @@ float* xraySource::simulateSpectra(float kVp_in, float takeOffAngle_in, int Z_in
                     else if (j == 1)
                         amp *= 0.22;
                 }
+                //printf("kV = %f, amp(after) = %f\n", kVp, amp);
             }
             
             //int iLine = int((eLine - eMin) / dE + 0.5);
             int iLine = int(0.5 + gamma_inv(eLine));
+            //printf("kV = %f, iLine = %d, amp(after) = %f\n", kVp, iLine, amp);
             s[iLine] += amp;
         }
     }
@@ -182,7 +185,9 @@ float* xraySource::bremsstrahlung()
     else
         a =  0.2010 - 0.000690*float(Z);
     
-    float d = (kVp - gamma(0)) / float(N - 1);
+    int N_at_kVp = int(0.5+gamma_inv(kVp));
+    //float d = (kVp - gamma(0)) / float(N - 1);
+    float d = (kVp - gamma(0)) / float(N_at_kVp);
 
     float* s = (float*) malloc(sizeof(float)*N);
     for (int i = 0; i < N; i++)
@@ -194,7 +199,10 @@ float* xraySource::bremsstrahlung()
         float L = log(33.397*(2.0*kVp+gamma_cur)/float(Z));
         float R = Rfunc(gamma_cur);
         
-        s[i] = d * 5.47152e9 * Z * (kVp/gamma_cur-1.0) * B * R / L * f;
+        if (gamma_cur <= kVp)
+            s[i] = d * 5.47152e9 * Z * (kVp / gamma_cur - 1.0) * B * R / L * f;
+        else
+            s[i] = 0.0;
     }
 
     return s;
@@ -250,7 +258,8 @@ float xraySource::fNjkl(int k, int l)
     // fNjkl ==> Delta ==> Leff ==> muEff
     int j = getJ();
     //float A = axsec->getAtomicMass(Z);
-    float Eo = gamma(N-1);
+    //float Eo = gamma(N-1);
+    float Eo = kVp;
 
     float Eedge = Eabs(j,k,l);
     float Eline = Ejkl(j,k,l);

@@ -35,6 +35,7 @@ extern "C" XRAYPHYSICS_API float sigmaTP(float Z, float gamma);
 extern "C" XRAYPHYSICS_API float sigmaCompoundTP(const char* chemForm, float gamma);
 
 extern "C" XRAYPHYSICS_API float meanEnergy(float* spectralResponse, float* gammas, int N);
+extern "C" XRAYPHYSICS_API bool normalizeSpectrum(float* spectralResponse, float* gammas, int N);
 
 extern "C" XRAYPHYSICS_API float effectiveZ(const char* chemForm, float min_energy, float max_energy, float arealDensity);
 
@@ -52,3 +53,5 @@ extern "C" XRAYPHYSICS_API bool setBHlookupTable_compound(const char* chemForm, 
 
 extern "C" XRAYPHYSICS_API bool setBHClookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
 extern "C" XRAYPHYSICS_API bool setBHClookupTable_compound(const char* chemForm, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
+
+extern "C" XRAYPHYSICS_API bool generateDEDlookUpTables(float* spectralResponses, float* gammas, int N_gamma, float* referenceEnergies, float* basisFunctions, float* LUT, float T_lac, int N_lac);

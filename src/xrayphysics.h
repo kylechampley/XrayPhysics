@@ -18,6 +18,7 @@ public:
     bool changeTakeOffAngle(float kVp, float takeOffAngle_cur, float takeOffAngle_new, int Z, float* gammas, int N, float* s);
 
     float meanEnergy(float* spectralResponse, float* gammas, int N);
+    bool normalizeSpectrum(float* spectralResponse, float* gammas, int N);
 
     float effectiveAttenuation(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N);
     float effectiveEnergy(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N);
@@ -35,6 +36,8 @@ public:
 
     bool setBHClookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
     bool setBHClookupTable(const char* chemForm, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
+
+    bool generateDEDlookUpTables(float* spectralResponses, float* gammas, int N_gamma, float* referenceEnergies, float* basisFunctions, float* LUT, float T_lac, int N_lac);
 
     xsec xsecTables;
     xraySource XraySourceModel;

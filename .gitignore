@@ -4,7 +4,7 @@ compareToTASMICS.py
 # data files
 *.dat
 *.raw
-
+*.tif
 
 # temporary files
 *.bak

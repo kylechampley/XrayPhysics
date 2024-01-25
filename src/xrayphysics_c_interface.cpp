@@ -95,6 +95,11 @@ float meanEnergy(float* spectralResponse, float* gammas, int N)
     return physics.meanEnergy(spectralResponse, gammas, N);
 }
 
+bool normalizeSpectrum(float* spectralResponse, float* gammas, int N)
+{
+    return physics.normalizeSpectrum(spectralResponse, gammas, N);
+}
+
 float effectiveZ(const char* chemForm, float min_energy, float max_energy, float arealDensity)
 {
     return physics.effectiveZ(chemForm, min_energy, max_energy, arealDensity);
@@ -148,4 +153,9 @@ bool setBHClookupTable(float Ze, float* spectralResponse, float* gammas, int N_g
 bool setBHClookupTable_compound(const char* chemForm, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy)
 {
     return physics.setBHClookupTable(chemForm, spectralResponse, gammas, N_gamma, LUT, T_lac, N_lac, referenceEnergy);
+}
+
+bool generateDEDlookUpTables(float* spectralResponses, float* gammas, int N_gamma, float* referenceEnergies, float* basisFunctions, float* LUT, float T_lac, int N_lac)
+{
+    return physics.generateDEDlookUpTables(spectralResponses, gammas, N_gamma, referenceEnergies, basisFunctions, LUT, T_lac, N_lac);
 }

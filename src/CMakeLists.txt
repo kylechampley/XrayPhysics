@@ -18,6 +18,7 @@ set(HEADER
   xrayphysics_c_interface.h
   xsec_raw.h
   xsource.h
+  dual_energy_decomposition.h
 )
 
 set(SRC_CPP
@@ -26,6 +27,7 @@ set(SRC_CPP
   xrayphysics_c_interface.cpp
   xsec_raw.cpp
   xsource.cpp
+  dual_energy_decomposition.cpp
 )
 
 add_library(xrayphysics SHARED

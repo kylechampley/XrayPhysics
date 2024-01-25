@@ -1,4 +1,5 @@
 #include "xrayphysics.h"
+#include "dual_energy_decomposition.h"
 #include <string>
 
 XrayPhysics::XrayPhysics()
@@ -61,6 +62,35 @@ float XrayPhysics::meanEnergy(float* spectralResponse, float* gammas, int N)
         accum += T_phi * spectralResponse[i];
     }
     return float(retVal / accum);
+}
+
+bool XrayPhysics::normalizeSpectrum(float* spectralResponse, float* gammas, int N)
+{
+    if (spectralResponse == NULL || gammas == NULL || N <= 0)
+        return false;
+    if (N == 1)
+    {
+        spectralResponse[0] = 1.0;
+    }
+    else
+    {
+        double accum = 0.0;
+        for (int i = 0; i < N; i++)
+        {
+            float T_phi;
+            if (i == 0)
+                T_phi = gammas[i + 1] - gammas[i];
+            else if (i == N - 1)
+                T_phi = gammas[i] - gammas[i - 1];
+            else
+                T_phi = 0.5 * (gammas[i + 1] - gammas[i - 1]);
+
+            accum += T_phi * spectralResponse[i];
+        }
+        for (int i = 0; i < N; i++)
+            spectralResponse[i] = spectralResponse[i] / accum;
+    }
+    return true;
 }
 
 float XrayPhysics::effectiveAttenuation(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N)
@@ -550,4 +580,10 @@ bool XrayPhysics::setBHlookupTable_helper(double* sigma_hat, float* spectralResp
     }
     delete[] d;
     return retVal;
+}
+
+bool XrayPhysics::generateDEDlookUpTables(float* spectralResponses, float* gammas, int N_gamma, float* referenceEnergies, float* basisFunctions, float* LUT, float T_lac, int N_lac)
+{
+    dualEnergyDecomposition DED;
+    return DED.generateDEDlookUpTables(spectralResponses, gammas, N_gamma, referenceEnergies, basisFunctions, LUT, T_lac, N_lac);
 }
