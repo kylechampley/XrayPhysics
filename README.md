@@ -4,7 +4,7 @@ This is a C/C++ library and Python bindings with the following capabilities:
 2) x-ray source spectra modeling (for any source voltage and take-off angle, and the following anode types: Cu, Mo, W, Au)
 3) single-material beam hardening correction algorithms (theoretically exact and polynomial-based)
 4) Calculation of the LLNL-defined effective atomic number; For more information see [here](https://ieeexplore.ieee.org/document/8638824)
-5) dual energy decomposition algorithms
+5) dual energy decomposition algorithms (and SIRZ if used in conjuction with [LEAP](https://github.com/LLNL/LEAP))
 
 And here are the features we are working on for the next relase:
 1) multi-material beam hardening correction algorithms
@@ -30,5 +30,8 @@ XrayPhysics is distributed under the terms of the MIT license. All new contribut
 See [LICENSE](LICENSE) for more details.  
 SPDX-License-Identifier: MIT  
 
-Please cite our work by referencing this github page
+Please cite our work by referencing this github page and the following [paper](https://ieeexplore.ieee.org/document/8638824):
+
+Champley, Kyle M., Stephen G. Azevedo, Isaac M. Seetho, Steven M. Glenn, Larry D. McMichael, Jerel A. Smith, Jeffrey S. Kallman, William D. Brown, and Harry E. Martz. "Method to extract system-independent material properties from dual-energy X-ray CT." IEEE Transactions on Nuclear Science 66, no. 3 (2019): 674-686.
+
 
