@@ -39,12 +39,17 @@ public:
 
     bool generateDEDlookUpTables(float* spectralResponses, float* gammas, int N_gamma, float* referenceEnergies, float* basisFunctions, float* LUT, float T_lac, int N_lac);
 
+    bool setTwoMaterialBHClookupTable(float* spectralResponse, float* gammas, int N_gamma, float referenceEnergy, float* sigmas, float* LUT, float T_atten, int N_atten);
+
     xsec xsecTables;
     xraySource XraySourceModel;
 private:
 
     bool setBHlookupTable_helper(double* sigma_hat, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
     bool setBHClookupTable_helper(double* sigma_hat, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
+
+    bool BHCkernel(double& monoAtten, double polyAtten, double* normalizedCrossSection, double* d, int N_gamma);
+    float gamma_inv(float val, float* gammas, int N_gamma);
 };
 
 //BHC and BH

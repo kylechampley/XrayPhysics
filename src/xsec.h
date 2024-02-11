@@ -5,6 +5,8 @@
 #pragma once
 #endif
 
+#define USE_OPENMP
+
 #include <stdlib.h>
 #include <vector>
 #include <string>

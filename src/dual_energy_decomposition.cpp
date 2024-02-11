@@ -1,7 +1,5 @@
 #include "dual_energy_decomposition.h"
 
-#define USE_OPENMP
-
 #ifdef USE_OPENMP
 #include <omp.h>
 #endif

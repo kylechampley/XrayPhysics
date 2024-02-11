@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from xrayphysics import *
 physics = xrayPhysics()
 
-whichPlot = 4
+whichPlot = 5
 
 
 #########################################################################################
@@ -77,7 +77,7 @@ if whichPlot == 3:
 #########################################################################################
 # Example 4: Generate BH Lookup Table
 #########################################################################################
-LUT, T_lut = physics.setBHlookupTable('Al', s_total, Es)
+LUT, T_lut = physics.setBHlookupTable(s_total, Es, 'Al')
 monoAttens = np.array(range(LUT.size))*T_lut
 if whichPlot == 4:
     plt.plot(monoAttens, LUT, 'k-')
@@ -91,7 +91,7 @@ if whichPlot == 4:
 # Example 5: Generate BHC Lookup Table
 #########################################################################################
 import time
-LUT, T_lut = physics.setBHClookupTable('Al', s_total, Es)
+LUT, T_lut = physics.setBHClookupTable(s_total, Es, 'Al')
 polyAttens = np.array(range(LUT.size))*T_lut
 if whichPlot == 5:
     plt.plot(polyAttens, LUT, 'k-')
@@ -104,7 +104,7 @@ if whichPlot == 5:
 #########################################################################################
 # Example 6: Generate Polynomial BHC Coefficients
 #########################################################################################
-coeff = physics.polynomialBHC('Al', 2.7, s_total, Es, referenceEnergy=0.0, maxThickness=10.0, order=2)
+coeff = physics.polynomialBHC(s_total, Es, 'Al', 2.7, referenceEnergy=0.0, maxThickness=10.0, order=2)
 print(coeff)
 
 

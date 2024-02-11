@@ -25,6 +25,67 @@ class xrayPhysics:
             from ctypes import cdll
             # Adjust the path to where your .dylib file is located
             self.libxrayphysics = cdll.LoadLibrary(os.path.join(current_dir, "../build/lib/libxrayphysics.dylib"))
+            
+        self.detectorBits = 16
+        self.length_units = 'cm'
+
+    def use_cm(self):
+        """Call this function so that all units that use lengths are cm-based (this is the default setting)"""
+        self.length_units = 'cm'
+        
+    def use_mm(self):
+        """Call this function so that all units that use lengths are mm-based"""
+        self.length_units = 'mm'
+
+    def cross_section_scalar(self):
+        """Returns the scalar to convert the units of cross sections
+        Should only be used to alter a return values from self.libxrayphysics
+        or to do inverse scaling to an argument to a self.libxrayphysics function
+        """
+        if self.length_units == 'mm':
+            return 1.0e2
+        else:
+            return 1.0
+            
+    def LAC_scalar(self):
+        """Returns the scalar to convert the units of Linear Attenuation Coefficient (LAC)
+        Should only be used to alter a return values from self.libxrayphysics
+        or to do inverse scaling to an argument to a self.libxrayphysics function
+        """
+        if self.length_units == 'mm':
+            return 0.1
+        else:
+            return 1.0
+            
+    def density_scalar(self):
+        """Returns the scalar to convert the units of density
+        Should only be used to alter a return values from self.libxrayphysics
+        or to do inverse scaling to an argument to a self.libxrayphysics function
+        """
+        if self.length_units == 'mm':
+            return 1.0e-3
+        else:
+            return 1.0
+            
+    def areal_density_scalar(self):
+        """Returns the scalar to convert the units of areal density
+        Should only be used to alter a return values from self.libxrayphysics
+        or to do inverse scaling to an argument to a self.libxrayphysics function
+        """
+        if self.length_units == 'mm':
+            return 1.0e-2
+        else:
+            return 1.0
+            
+    def thickness_scalar(self):
+        """Returns the scalar to convert the units of thickness
+        Should only be used to alter a return values from self.libxrayphysics
+        or to do inverse scaling to an argument to a self.libxrayphysics function
+        """
+        if self.length_units == 'mm':
+            return 10.0
+        else:
+            return 1.0
 
     def mu(self, Z, gamma, massDensity):
         return massDensity * self.sigma(Z, gamma)
@@ -55,9 +116,8 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmaCompound(chemicalFormula, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmaCompound(chemicalFormula, float(gamma))
+                retVal = self.libxrayphysics.sigmaCompound(chemicalFormula, float(gamma))
         else:
             self.libxrayphysics.sigma.argtypes = [ctypes.c_float, ctypes.c_float]
             self.libxrayphysics.sigma.restype = ctypes.c_float
@@ -65,9 +125,10 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigma(Z, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigma(Z, gamma)
+                retVal = self.libxrayphysics.sigma(Z, gamma)
+        retVal *= self.cross_section_scalar()
+        return retVal
                 
     def sigma_e(self, Z, gamma):
         if isinstance(Z, str):
@@ -80,9 +141,8 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmaeCompound(chemicalFormula, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmaeCompound(chemicalFormula, float(gamma))
+                retVal = self.libxrayphysics.sigmaeCompound(chemicalFormula, float(gamma))
         else:
             self.libxrayphysics.sigmae.argtypes = [ctypes.c_float, ctypes.c_float]
             self.libxrayphysics.sigmae.restype = ctypes.c_float
@@ -90,9 +150,10 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmae(Z, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmae(Z, gamma)
+                retVal = self.libxrayphysics.sigmae(Z, gamma)
+        retVal *= self.cross_section_scalar()
+        return retVal
 
     def rhoe(self, Z, massDensity):
         #massDensity * sigma = rhoe*sigma_e
@@ -113,9 +174,8 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmaCompoundPE(chemicalFormula, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmaCompoundPE(chemicalFormula, float(gamma))
+                retVal = self.libxrayphysics.sigmaCompoundPE(chemicalFormula, float(gamma))
         else:
             self.libxrayphysics.sigmaPE.argtypes = [ctypes.c_float, ctypes.c_float]
             self.libxrayphysics.sigmaPE.restype = ctypes.c_float
@@ -123,9 +183,10 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmaPE(Z, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmaPE(Z, gamma)
+                retVal = self.libxrayphysics.sigmaPE(Z, gamma)
+        retVal *= self.cross_section_scalar()
+        return retVal
             
     def sigmaCS(self, Z, gamma):
         if isinstance(Z, str):
@@ -138,9 +199,8 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmaCompoundCS(chemicalFormula, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmaCompoundCS(chemicalFormula, float(gamma))
+                retVal = self.libxrayphysics.sigmaCompoundCS(chemicalFormula, float(gamma))
         else:
             self.libxrayphysics.sigmaCS.argtypes = [ctypes.c_float, ctypes.c_float]
             self.libxrayphysics.sigmaCS.restype = ctypes.c_float
@@ -148,10 +208,11 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmaCS(Z, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmaCS(Z, gamma)
-            
+                retVal = self.libxrayphysics.sigmaCS(Z, gamma)
+        retVal *= self.cross_section_scalar()
+        return retVal
+        
     def sigmaRS(self, Z, gamma):
         if isinstance(Z, str):
             chemicalFormula = Z
@@ -163,9 +224,8 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmaCompoundRS(chemicalFormula, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmaCompoundRS(chemicalFormula, float(gamma))
+                retVal = self.libxrayphysics.sigmaCompoundRS(chemicalFormula, float(gamma))
         else:
             self.libxrayphysics.sigmaRS.argtypes = [ctypes.c_float, ctypes.c_float]
             self.libxrayphysics.sigmaRS.restype = ctypes.c_float
@@ -173,9 +233,10 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmaRS(Z, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmaRS(Z, gamma)
+                retVal = self.libxrayphysics.sigmaRS(Z, gamma)
+        retVal *= self.cross_section_scalar()
+        return retVal
             
     def sigmaPP(self, Z, gamma):
         if isinstance(Z, str):
@@ -188,9 +249,8 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmaCompoundPP(chemicalFormula, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmaCompoundPP(chemicalFormula, float(gamma))
+                retVal = self.libxrayphysics.sigmaCompoundPP(chemicalFormula, float(gamma))
         else:
             self.libxrayphysics.sigmaPP.argtypes = [ctypes.c_float, ctypes.c_float]
             self.libxrayphysics.sigmaPP.restype = ctypes.c_float
@@ -198,9 +258,10 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmaPP(Z, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmaPP(Z, gamma)
+                retVal = self.libxrayphysics.sigmaPP(Z, gamma)
+        retVal *= self.cross_section_scalar()
+        return retVal
             
     def sigmaTP(self, Z, gamma):
         if isinstance(Z, str):
@@ -213,9 +274,8 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmaCompoundTP(chemicalFormula, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmaCompoundTP(chemicalFormula, float(gamma))
+                retVal = self.libxrayphysics.sigmaCompoundTP(chemicalFormula, float(gamma))
         else:
             self.libxrayphysics.sigmaTP.argtypes = [ctypes.c_float, ctypes.c_float]
             self.libxrayphysics.sigmaTP.restype = ctypes.c_float
@@ -223,9 +283,10 @@ class xrayPhysics:
                 retVal = gamma.copy()
                 for n in range(gamma.size):
                     retVal[n] = self.libxrayphysics.sigmaTP(Z, float(gamma[n]))
-                return retVal
             else:
-                return self.libxrayphysics.sigmaTP(Z, gamma)
+                retVal = self.libxrayphysics.sigmaTP(Z, gamma)
+        retVal *= self.cross_section_scalar()
+        return retVal
     
     def simulateSpectra(self, kV, takeOffAngle=11.0, Z=74, gammas=None):
         #simulateSpectra(float kV, float takeOffAngle, int Z, float* gammas, int N, float* output)
@@ -233,7 +294,11 @@ class xrayPhysics:
         if gammas is None:
             maxEnergy = max(1,int(np.ceil(kV)))
             minEnergy = max(1,int(0.1*np.ceil(kV)))
-            gammas = np.ascontiguousarray(np.array(range(minEnergy,maxEnergy+1)), dtype=np.float32)
+            T_E = max(1, int(np.floor(maxEnergy/100.0)))
+            if T_E > 1:
+                N = int(np.ceil(float(maxEnergy - minEnergy) / float(T_E)))
+                minEnergy = maxEnergy - N*T_E
+            gammas = np.ascontiguousarray(np.array(range(minEnergy,maxEnergy+1,T_E)), dtype=np.float32)
         if Z is None:
             Z = 74
         
@@ -281,7 +346,7 @@ class xrayPhysics:
             #float effectiveZ(const char* chemForm, float min_energy, float max_energy, float arealDensity);
             self.libxrayphysics.effectiveZ.restype = ctypes.c_float
             self.libxrayphysics.effectiveZ.argtypes = [ctypes.c_char_p, ctypes.c_float, ctypes.c_float, ctypes.c_float]
-            return self.libxrayphysics.effectiveZ(chemicalFormula, min_energy, max_energy, arealDensity)
+            return self.libxrayphysics.effectiveZ(chemicalFormula, min_energy, max_energy, arealDensity/self.areal_density_scalar())
         else:
             print('Error: first argument must be a chemical formula string')
             return 0.0
@@ -294,11 +359,11 @@ class xrayPhysics:
                 chemicalFormula = bytes(str(chemicalFormula), 'ascii')
             self.libxrayphysics.effectiveAttenuation_compound.restype = ctypes.c_float
             self.libxrayphysics.effectiveAttenuation_compound.argtypes = [ctypes.c_char_p, ctypes.c_float, ctypes.c_float, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
-            return self.libxrayphysics.effectiveAttenuation_compound(chemicalFormula, density, thickness, spectralResponse, gammas, gammas.size)
+            return self.libxrayphysics.effectiveAttenuation_compound(chemicalFormula, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
         else:
             self.libxrayphysics.effectiveAttenuation.restype = ctypes.c_float
             self.libxrayphysics.effectiveAttenuation.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
-            return self.libxrayphysics.effectiveAttenuation(Z, density, thickness, spectralResponse, gammas, gammas.size)
+            return self.libxrayphysics.effectiveAttenuation(Z, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
     
     def effectiveEnergy(self, Z, density, thickness, spectralResponse, gammas):
         #float effectiveEnergy(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N);
@@ -308,11 +373,11 @@ class xrayPhysics:
                 chemicalFormula = bytes(str(chemicalFormula), 'ascii')
             self.libxrayphysics.effectiveEnergy_compound.restype = ctypes.c_float
             self.libxrayphysics.effectiveEnergy_compound.argtypes = [ctypes.c_char_p, ctypes.c_float, ctypes.c_float, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
-            return self.libxrayphysics.effectiveEnergy_compound(chemicalFormula, density, thickness, spectralResponse, gammas, gammas.size)
+            return self.libxrayphysics.effectiveEnergy_compound(chemicalFormula, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
         else:
             self.libxrayphysics.effectiveEnergy.restype = ctypes.c_float
             self.libxrayphysics.effectiveEnergy.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
-            return self.libxrayphysics.effectiveEnergy(Z, density, thickness, spectralResponse, gammas, gammas.size)
+            return self.libxrayphysics.effectiveEnergy(Z, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
             
     def transmission(self, Z, density, thickness, spectralResponse, gammas):
         #float transmission(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N);
@@ -322,17 +387,18 @@ class xrayPhysics:
                 chemicalFormula = bytes(str(chemicalFormula), 'ascii')
             self.libxrayphysics.transmission_compound.restype = ctypes.c_float
             self.libxrayphysics.transmission_compound.argtypes = [ctypes.c_char_p, ctypes.c_float, ctypes.c_float, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
-            return self.libxrayphysics.transmission_compound(chemicalFormula, density, thickness, spectralResponse, gammas, gammas.size)
+            return self.libxrayphysics.transmission_compound(chemicalFormula, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
         else:
             self.libxrayphysics.transmission.restype = ctypes.c_float
             self.libxrayphysics.transmission.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
-            return self.libxrayphysics.transmission(Z, density, thickness, spectralResponse, gammas, gammas.size)
+            return self.libxrayphysics.transmission(Z, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
             
-    def setBHlookupTable(self, Z, spectralResponse, gammas, T_atten=0.0, N_atten=0, referenceEnergy=0.0):
+    def setBHlookupTable(self, spectralResponse, gammas, Z, referenceEnergy=0.0, T_atten=0.0, N_atten=0):
         if N_atten <= 0 or T_atten <= 0.0:
             max_lac = 48.0
+            T_atten = 1.0e-3 # about 66 counts max
             #T_atten = 2.0e-4 # about 0.06MB; 14 counts on a 16-bit detector
-            T_atten = 1.0e-4 # about 0.12MB
+            #T_atten = 1.0e-4 # about 0.12MB
             #T_atten = 1.0e-5 # about 1.2MB
             #T_atten = 1.0e-6 # about 12MB
             N_atten = int(np.ceil(max_lac / T_atten)) + 1
@@ -357,13 +423,14 @@ class xrayPhysics:
             self.libxrayphysics.setBHlookupTable(Z, spectralResponse, gammas, N_gamma, LUT, T_atten, N_atten, referenceEnergy)
         return LUT, T_atten
 
-    def setBHClookupTable(self, Z, spectralResponse, gammas, T_atten=0.0, N_atten=0, referenceEnergy=0.0):
+    def setBHClookupTable(self, spectralResponse, gammas, Z, referenceEnergy=0.0, T_atten=0.0, N_atten=0):
         #bool setBHClookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_atten, int N_atten, float referenceEnergy);
         
         if N_atten <= 0 or T_atten <= 0.0:
             max_atten = 12.0
+            T_atten = 1.0e-3 # about 66 counts max
             #T_atten = 2.0e-4 # about 0.06MB; 14 counts on a 16-bit detector
-            T_atten = 1.0e-4 # about 0.12MB
+            #T_atten = 1.0e-4 # about 0.12MB
             #T_atten = 1.0e-5 # about 1.2MB
             #T_atten = 1.0e-6 # about 12MB
             N_atten = int(np.ceil(max_atten / T_atten)) + 1
@@ -388,7 +455,7 @@ class xrayPhysics:
             self.libxrayphysics.setBHClookupTable(Z, spectralResponse, gammas, N_gamma, LUT, T_atten, N_atten, referenceEnergy)
         return LUT, T_atten
         
-    def polynomialBHC(self, Z, density, spectralResponse, gammas, referenceEnergy=0.0, maxThickness=10.0, order=2):
+    def polynomialBHC(self, spectralResponse, gammas, Z, density, referenceEnergy=0.0, maxThickness=10.0, order=2):
         order = max(1, min(order, 10))
         if maxThickness <= 0.0:
             return None
@@ -416,6 +483,31 @@ class xrayPhysics:
                 b[i] += monoAtten * polyAttenPowers[i+1]
         return np.concatenate((np.zeros((1,1)),np.matmul(np.linalg.inv(A), b)))
         
+    def setTwoMaterialBHClookupTable(self, spectralResponse, gammas, sigma_1, sigma_2, referenceEnergy=None, T_atten=0.0, N_atten=0):
+        N = gammas.size
+        if spectralResponse.size != N or sigma_1.size != N or sigma_2.size != N:
+            print('Error: Input arrays must all be the same size!')
+            return None, None
+            
+        if T_atten <= 0.0 or N_atten <= 0:
+            T_atten = 0.01
+            attenMax = np.ceil(-np.log(2.0**(-self.detectorBits)))
+            N_atten = int(np.ceil(attenMax/T_atten))+1
+        
+        if referenceEnergy is None:
+            referenceEnergy = np.floor(self.meanEnergy(spectralResponse, gammas))
+            print('Using reference energy: ' + str(referenceEnergy) + ' keV')
+        
+        sigmas = np.zeros((2,gammas.size), dtype=np.float32)
+        sigmas[0,:] = sigma_1[:]
+        sigmas[1,:] = sigma_2[:]
+        
+        LUT = np.zeros((N_atten,N_atten), dtype=np.float32)
+        self.libxrayphysics.setTwoMaterialBHClookupTable.restype = ctypes.c_bool
+        self.libxrayphysics.setTwoMaterialBHClookupTable.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int, ctypes.c_float, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_float, ctypes.c_int]
+        self.libxrayphysics.setTwoMaterialBHClookupTable(spectralResponse, gammas, gammas.size, referenceEnergy, sigmas, LUT, T_atten, N_atten)
+        return LUT, T_atten
+        
     def setDEDlookupTable(self, spectralResponse_L, spectralResponse_H, gammas, basisFunction_1, basisFunction_2, referenceEnergies=None, T_atten=0.0, N_atten=0):
         #bool generateDEDlookUpTables(float* spectralResponses, float* gammas, int N_gamma, float* referenceEnergies, float* basisFunctions, float* LUT, float T_lac, int N_lac);
         
@@ -425,20 +517,12 @@ class xrayPhysics:
             return None, None
         
         if T_atten <= 0.0 or N_atten <= 0:
-            T_atten = 0.01
-            T_atten = np.sqrt(8.0*1.0e-5) # = 0.008944; max interpolation error of 1e-5 max |f''(x)|
+            #T_atten = np.sqrt(8.0*1.0e-5) # = 0.008944; max interpolation error of 1e-5 max |f''(x)|
             #T_atten = sqrt(8.0*0.5e-5) # = 0.006325; max interpolation error of 0.5e-5 max |f''(x)|
             #T_atten = 0.005
-            #T_atten = 0.01
-            
-            #T_atten = 0.1 # FIXME, just for testing
-            
-            detectorBits = 16.0
-            attenMax = -np.log(2.0**(-detectorBits))
-            
+
             T_atten = 0.01
-            attenMax = np.ceil(attenMax)
-            
+            attenMax = np.ceil(-np.log(2.0**(-self.detectorBits)))
             N_atten = int(np.ceil(attenMax/T_atten))+1
             
         if referenceEnergies is None:
@@ -465,6 +549,7 @@ class xrayPhysics:
     def PhotoelectricBasis(self, gammas):
         basisFcn = gammas.copy()
         basisFcn[:] = gammas[:]**-3.0
+        basisFcn *= self.cross_section_scalar()
         return basisFcn
         
     def ComptonBasis(self, gammas):
@@ -479,5 +564,6 @@ class xrayPhysics:
         one_plus_two_alpha = 1.0+2.0*alpha
         log_term = np.log(one_plus_two_alpha)
         basisFcn = (1.0+one_plus_two_alpha)/(2.0*one_plus_two_alpha*one_plus_two_alpha) + ((alpha*alpha-1.0-one_plus_two_alpha)*log_term + 4.0*alpha)/(2.0*alpha*alpha*alpha) * two_PI_KNconstant
+        basisFcn *= self.cross_section_scalar()
         return basisFcn
         

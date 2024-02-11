@@ -2,6 +2,10 @@
 #include "dual_energy_decomposition.h"
 #include <string>
 
+#ifdef USE_OPENMP
+#include <omp.h>
+#endif
+
 XrayPhysics::XrayPhysics()
 {
     XraySourceModel.init(&xsecTables);
@@ -38,6 +42,26 @@ bool XrayPhysics::changeTakeOffAngle(float kVp, float takeOffAngle_cur, float ta
     else
         return false;
 
+}
+
+float XrayPhysics::gamma_inv(float val, float* gammas, int N_gamma)
+{
+    if (val <= gammas[0])
+        return 0.0;
+    // energies[0] < val
+    for (int i = 1; i < N_gamma; i++)
+    {
+        if (val <= gammas[i])
+        {
+            // energies[i-1] <= val <= energies[i]
+
+            float d = (val - gammas[i - 1]) / (gammas[i] - gammas[i - 1]);
+
+            return float(i - 1) + d;
+        }
+    }
+
+    return float(N_gamma - 1);
 }
 
 float XrayPhysics::meanEnergy(float* spectralResponse, float* gammas, int N)
@@ -423,6 +447,7 @@ bool XrayPhysics::setBHClookupTable_helper(double* sigma_hat, float* spectralRes
         double p_cur = LUT[i - 1];
         if (i == 1)
             p_cur = curLAC;
+        /*
         double modelError, denom, theExponent, expFactor;
         for (int n = 0; n < N_iter; n++)
         {
@@ -444,6 +469,8 @@ bool XrayPhysics::setBHClookupTable_helper(double* sigma_hat, float* spectralRes
                 break;
             p_cur = p_cur + modelError / denom;
         }
+        //*/
+        BHCkernel(p_cur, curLAC, sigma_hat, d, N_gamma);
         if (isnan(p_cur))
         {
             printf("XrayPhysics::setBHClookupTable: nan value encountered, quitting!\n");
@@ -458,6 +485,43 @@ bool XrayPhysics::setBHClookupTable_helper(double* sigma_hat, float* spectralRes
     }
     delete[] d;
     return retVal;
+}
+
+bool XrayPhysics::BHCkernel(double& monoAtten, double polyAtten, double* normalizedCrossSection, double* d, int N_gamma)
+{
+    int N_iter = 10;
+    double tol = 1.0e-7;
+
+    double modelError, denom, expFactor;
+    double theExponent;
+    for (int n = 0; n < N_iter; n++)
+    {
+        modelError = 0.0;
+        denom = 0.0;
+        for (int l = 0; l < N_gamma; l++)
+        {
+            theExponent = normalizedCrossSection[l];
+            expFactor = exp(-theExponent * monoAtten);
+            modelError += d[l] * expFactor;
+            denom += d[l] * theExponent * expFactor;
+        }
+        //modelError *= T_gamma;
+        //denom *= T_gamma;
+
+        denom = denom / modelError; // new method
+        modelError = (polyAtten + log(modelError)); // new method
+        if (fabs(modelError) < tol || fabs(denom) < 1.0e-15)
+            break;
+        monoAtten += modelError / denom;
+    }
+
+    if (isnan(monoAtten))
+    {
+        //printf("XrayPhysics::BHCkernel: nan value encountered, quitting!\n");
+        return false;
+    }
+    else
+        return true;
 }
 
 bool XrayPhysics::setBHClookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy)
@@ -586,4 +650,82 @@ bool XrayPhysics::generateDEDlookUpTables(float* spectralResponses, float* gamma
 {
     dualEnergyDecomposition DED;
     return DED.generateDEDlookUpTables(spectralResponses, gammas, N_gamma, referenceEnergies, basisFunctions, LUT, T_lac, N_lac);
+}
+
+bool XrayPhysics::setTwoMaterialBHClookupTable(float* spectralResponse, float* gammas, int N_gamma, float referenceEnergy, float* sigmas, float* LUT, float T_atten, int N_atten)
+{
+    if (spectralResponse == NULL || gammas == NULL || N_gamma <= 0)
+        return false;
+    if (LUT == NULL || T_atten <= 0.0 || N_atten <= 0)
+        return false;
+
+    double* d = new double[N_gamma];
+    double accum = 0.0;
+    for (int i = 0; i < N_gamma; i++)
+    {
+        double T_phi;
+        if (i == 0)
+            T_phi = gammas[i + 1] - gammas[i];
+        else if (i == N_gamma - 1)
+            T_phi = gammas[i] - gammas[i - 1];
+        else
+            T_phi = 0.5 * (gammas[i + 1] - gammas[i - 1]);
+
+        d[i] = T_phi * spectralResponse[i];
+        accum += T_phi * spectralResponse[i];
+    }
+    for (int i = 0; i < N_gamma; i++)
+        d[i] = d[i] / accum;
+
+    float* sigma_1 = &sigmas[0];
+    float* sigma_2 = &sigmas[N_gamma];
+
+    double* sigma_hat_1 = new double[N_gamma];
+    double* sigma_hat_2 = new double[N_gamma];
+    float ind_ref = gamma_inv(referenceEnergy, gammas, N_gamma);
+    int ind_lo = int(ind_ref);
+    int ind_hi = min(N_gamma - 1, ind_lo + 1);
+    float h = ind_ref - float(ind_lo);
+    float sigma_1_ref = (1.0 - h) * sigma_1[ind_lo] + h * sigma_1[ind_hi];
+    float sigma_2_ref = (1.0 - h) * sigma_2[ind_lo] + h * sigma_2[ind_hi];
+    for (int i = 0; i < N_gamma; i++)
+    {
+        sigma_hat_1[i] = sigma_1[i] / sigma_1_ref;
+        sigma_hat_2[i] = sigma_2[i] / sigma_2_ref;
+    }
+
+    bool retVal = true;
+
+    int N_iter = 10;
+    double tol = 1.0e-7;
+
+    double T_frac = 1.0 / double(N_atten - 1);
+    #ifdef USE_OPENMP
+    omp_set_num_threads(omp_get_num_procs());
+    #pragma omp parallel for schedule(dynamic)
+    #endif
+    for (int j = 0; j < N_atten; j++)
+    {
+        double frac = double(j) * T_frac;
+        double* normalizedCrossSection = new double[N_gamma];
+        for (int l = 0; l < N_gamma; l++)
+            normalizedCrossSection[l] = (1.0 - frac) * sigma_hat_1[l] + frac * sigma_hat_2[l];
+        for (int i = 0; i < N_atten; i++)
+        {
+            double polyAtten = double(i) * T_atten;
+            double monoAtten = polyAtten;
+            if (i > 0)
+                monoAtten = LUT[j * N_atten + i-1];
+            double monoAtten_save = monoAtten;
+            if (BHCkernel(monoAtten, polyAtten, normalizedCrossSection, d, N_gamma) == false)
+                monoAtten = monoAtten_save;
+            LUT[j * N_atten + i] = monoAtten;
+        }
+        delete[] normalizedCrossSection;
+    }
+
+    delete[] d;
+    delete[] sigma_hat_1;
+    delete[] sigma_hat_2;
+    return retVal;
 }

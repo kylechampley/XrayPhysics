@@ -159,3 +159,8 @@ bool generateDEDlookUpTables(float* spectralResponses, float* gammas, int N_gamm
 {
     return physics.generateDEDlookUpTables(spectralResponses, gammas, N_gamma, referenceEnergies, basisFunctions, LUT, T_lac, N_lac);
 }
+
+bool setTwoMaterialBHClookupTable(float* spectralResponse, float* gammas, int N_gamma, float referenceEnergy, float* sigmas, float* LUT, float T_lac, int N_lac)
+{
+    return physics.setTwoMaterialBHClookupTable(spectralResponse, gammas, N_gamma, referenceEnergy, sigmas, LUT, T_lac, N_lac);
+}

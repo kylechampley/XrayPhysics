@@ -55,3 +55,5 @@ extern "C" XRAYPHYSICS_API bool setBHClookupTable(float Ze, float* spectralRespo
 extern "C" XRAYPHYSICS_API bool setBHClookupTable_compound(const char* chemForm, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
 
 extern "C" XRAYPHYSICS_API bool generateDEDlookUpTables(float* spectralResponses, float* gammas, int N_gamma, float* referenceEnergies, float* basisFunctions, float* LUT, float T_lac, int N_lac);
+
+extern "C" XRAYPHYSICS_API bool setTwoMaterialBHClookupTable(float* spectralResponse, float* gammas, int N_gamma, float referenceEnergy, float* sigmas, float* LUT, float T_lac, int N_lac);
