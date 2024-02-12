@@ -1,6 +1,7 @@
 #include "xrayphysics.h"
 #include "dual_energy_decomposition.h"
 #include <string>
+#include <math.h>
 
 #ifdef USE_OPENMP
 #include <omp.h>

@@ -30,7 +30,7 @@ elif _platform == "darwin":
 
 setup(
     name='xrayphysics',
-    version='0.2', 
+    version='1.0', 
     author='Kyle Champley', 
     author_email='champley@gmail.com', 
     description='x-ray cross section tables, x-ray tube source simulation, beam hardening correction, and dual energy decompositon', 

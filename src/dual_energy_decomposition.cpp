@@ -1,4 +1,5 @@
 #include "dual_energy_decomposition.h"
+#include <math.h>
 
 #ifdef USE_OPENMP
 #include <omp.h>
