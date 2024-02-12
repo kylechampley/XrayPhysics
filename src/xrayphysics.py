@@ -27,7 +27,7 @@ class xrayPhysics:
             elif os.path.isfile(fullPath_backup):
                 self.libxrayphysics = cdll.LoadLibrary(fullPath_backup)
             else:
-                print('Error: could not find LEAP dynamic library at')
+                print('Error: could not find XrayPhysics dynamic library at')
                 print(fullPath)
                 print('or')
                 print(fullPath_backup)
@@ -50,14 +50,14 @@ class xrayPhysics:
                 except:
                     self.libxrayphysics = ctypes.CDLL(fullPath_backup, winmode=0)
             else:
-                print('Error: could not find LEAP dynamic library at')
+                print('Error: could not find XrayPhysics dynamic library at')
                 print(fullPath)
                 print('or')
                 print(fullPath_backup)
                 self.libxrayphysics = None
         
         elif _platform == "darwin":  # Darwin is the name for MacOS in Python's platform module
-            # there is current no support for LEAP on Mac, but maybe someone can figure this out
+            # there is current no support for XrayPhysics on Mac, but maybe someone can figure this out
             from ctypes import cdll
             
             fullPath = os.path.join(current_dir, 'libxrayphysics.dylib')
@@ -68,7 +68,7 @@ class xrayPhysics:
             elif os.path.isfile(fullPath_backup):
                 self.libxrayphysics = cdll.LoadLibrary(fullPath_backup)
             else:
-                print('Error: could not find LEAP dynamic library at')
+                print('Error: could not find XrayPhysics dynamic library at')
                 print(fullPath)
                 print('or')
                 print(fullPath_backup)
