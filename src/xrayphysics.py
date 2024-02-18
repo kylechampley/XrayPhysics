@@ -724,4 +724,20 @@ class xrayPhysics:
         basisFcn = (1.0+one_plus_two_alpha)/(2.0*one_plus_two_alpha*one_plus_two_alpha) + ((alpha*alpha-1.0-one_plus_two_alpha)*log_term + 4.0*alpha)/(2.0*alpha*alpha*alpha) * two_PI_KNconstant
         basisFcn *= self.cross_section_scalar()
         return basisFcn
+    
+    def PCAbases(self, listOfMaterials, gammas):
+        N = len(listOfMaterials)
+        X = np.zeros((N,gammas.size))
+        for n in range(N):
+            X[n,:] = self.sigma(listOfMaterials[n], gammas)
+        U, S, V = np.linalg.svd(X)
+        b_1 = V[0,:]
+        b_2 = V[1,:]
         
+        # Normalize the basis functions (not really necessary)
+        b_1 *= b_1[0]
+        b_2 *= b_2[0]
+        b_1 = b_1/np.sqrt(np.sum(b_1**2))
+        b_2 = b_2/np.sqrt(np.sum(b_2**2))
+        
+        return b_1, b_2

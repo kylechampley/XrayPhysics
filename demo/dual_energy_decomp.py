@@ -57,6 +57,9 @@ sigma_Al = physics.sigma('Al', Es)
 # Or use the next two lines for the Compton-Photoelectric basis
 PhotoBasisFcn = physics.PhotoelectricBasis(Es)
 ComptonBasisFcn = physics.ComptonBasis(Es)
+# Or use the next two lines for the PCA basis of the given materials
+b_1, b_2 = physics.PCAbases(['C','N','O','Al'], Es)
+
 
 # Now let's choose the reference energies of the decomposition.  The user is free to choose what they want,
 # but we recommend that these energies be within the energy range of the spectra and the low energy
@@ -77,6 +80,7 @@ referenceEnergy_H = np.round(physics.meanEnergy(s_H, Es))
 startTime = time.time()
 LUT, T_atten = physics.setDEDlookupTable(s_L, s_H, Es, sigma_water, sigma_Al, [referenceEnergy_L, referenceEnergy_H])
 #LUT,T_atten = physics.setDEDlookupTable(s_L, s_H, Es, PhotoBasisFcn, ComptonBasisFcn, [referenceEnergy_L, referenceEnergy_H])
+#LUT,T_atten = physics.setDEDlookupTable(s_L, s_H, Es, b_1, b_2, [referenceEnergy_L, referenceEnergy_H])
 print('DED LUT generation time: ' + str(time.time()-startTime) + ' seconds')
 
 # Plot Results
