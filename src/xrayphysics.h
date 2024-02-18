@@ -6,6 +6,7 @@
 #endif
 
 #include "xsec.h"
+#include "xscatter.h"
 #include "xsource.h"
 
 class XrayPhysics
@@ -13,6 +14,8 @@ class XrayPhysics
 public:
     XrayPhysics();
     ~XrayPhysics();
+
+    float atomicMass(int Z);
 
     bool simulateSpectra(float kVp, float takeOffAngle, int Z, float* gammas, int N, float* output);
     bool changeTakeOffAngle(float kVp, float takeOffAngle_cur, float takeOffAngle_new, int Z, float* gammas, int N, float* s);
@@ -31,6 +34,18 @@ public:
 
     float effectiveZ(const char* chemForm, float min_energy, float max_energy, float arealDensity = 0.0);
 
+    float incoherentScatterDistribution(float Z, float gamma, float theta);
+    float coherentScatterDistribution(float Z, float gamma, float theta);
+
+    float incoherentScatterDistribution(const char* chemForm, float gamma, float theta);
+    float coherentScatterDistribution(const char* chemForm, float gamma, float theta);
+
+    float incoherentScatterDistribution_normalizationFactor(float Z, float gamma);
+    float coherentScatterDistribution_normalizationFactor(float Z, float gamma);
+
+    float incoherentScatterDistribution_normalizationFactor(const char* chemForm, float gamma);
+    float coherentScatterDistribution_normalizationFactor(const char* chemForm, float gamma);
+
     bool setBHlookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
     bool setBHlookupTable(const char* chemForm, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_lac, int N_lac, float referenceEnergy);
 
@@ -42,6 +57,7 @@ public:
     bool setTwoMaterialBHClookupTable(float* spectralResponse, float* gammas, int N_gamma, float referenceEnergy, float* sigmas, float* LUT, float T_atten, int N_atten);
 
     xsec xsecTables;
+    xscatter xscatterTables;
     xraySource XraySourceModel;
 private:
 

@@ -81,6 +81,9 @@ public:
     float sigma_inv(float Ze, float val, int which = -1);
     float sigma_inv(int Z, float val, int which = -1);
 
+    float* parseChemicalFormula(const char*);
+    float* parseMaterialText(const char*);
+
     float getAtomicMass(int Z);
     float getMassDensity(int Z);
     float getElectronDensity(int Z);
@@ -98,7 +101,10 @@ private:
     int elementStringToAtomicNumber(string);
 
     size_t findNextCapitalLetter(string str, int pos = 0);
+    size_t findNextPlusSign(string str, int pos = 0);
     vector<string> splitIntoElements(string str);
+    vector<string> splitIntoMaterials(string str);
+    //bool hasPlusSign(string str);
 
     float logInterp(float interp_energy, float low_energy, float high_energy, float low_crossSect, float high_crossSect);
 

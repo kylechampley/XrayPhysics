@@ -10,6 +10,8 @@
     #define XRAYPHYSICS_API
 #endif
 
+extern "C" XRAYPHYSICS_API float atomicMass(int Z);
+
 extern "C" XRAYPHYSICS_API bool simulateSpectra(float kVp, float takeOffAngle, int Z, float* gammas, int N, float* output);
 extern "C" XRAYPHYSICS_API bool changeTakeOffAngle(float kVp, float takeOffAngle_cur, float takeOffAngle_new, int Z, float* gammas, int N, float* s);
 
@@ -33,6 +35,18 @@ extern "C" XRAYPHYSICS_API float sigmaCompoundPP(const char* chemForm, float gam
 
 extern "C" XRAYPHYSICS_API float sigmaTP(float Z, float gamma);
 extern "C" XRAYPHYSICS_API float sigmaCompoundTP(const char* chemForm, float gamma);
+
+extern "C" XRAYPHYSICS_API float incoherentScatterDistribution(float Z, float gamma, float theta);
+extern "C" XRAYPHYSICS_API float coherentScatterDistribution(float Z, float gamma, float theta);
+
+extern "C" XRAYPHYSICS_API float incoherentScatterDistributionCompound(const char* chemForm, float gamma, float theta);
+extern "C" XRAYPHYSICS_API float coherentScatterDistributionCompound(const char* chemForm, float gamma, float theta);
+
+extern "C" XRAYPHYSICS_API float incoherentScatterDistribution_normalizationFactor(float Z, float gamma);
+extern "C" XRAYPHYSICS_API float coherentScatterDistribution_normalizationFactor(float Z, float gamma);
+
+extern "C" XRAYPHYSICS_API float incoherentScatterDistributionCompound_normalizationFactor(const char* chemForm, float gamma);
+extern "C" XRAYPHYSICS_API float coherentScatterDistributionCompound_normalizationFactor(const char* chemForm, float gamma);
 
 extern "C" XRAYPHYSICS_API float meanEnergy(float* spectralResponse, float* gammas, int N);
 extern "C" XRAYPHYSICS_API bool normalizeSpectrum(float* spectralResponse, float* gammas, int N);

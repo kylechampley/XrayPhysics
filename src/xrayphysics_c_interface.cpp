@@ -10,6 +10,11 @@
 XrayPhysics physics;
 //xsecTables.init();
 
+float atomicMass(int Z)
+{
+    return physics.atomicMass(Z);
+}
+
 bool simulateSpectra(float kVp, float takeOffAngle, int Z, float* gammas, int N, float* output)
 {
     return physics.simulateSpectra(kVp, takeOffAngle, Z, gammas, N, output);
@@ -88,6 +93,46 @@ float sigmaTP(float Z, float gamma)
 float sigmaCompoundTP(const char* chemForm, float gamma)
 {
     return physics.xsecTables.sigmaTP(chemForm, gamma);
+}
+
+float incoherentScatterDistribution(float Z, float gamma, float theta)
+{
+    return physics.incoherentScatterDistribution(Z, gamma, theta);
+}
+
+float coherentScatterDistribution(float Z, float gamma, float theta)
+{
+    return physics.coherentScatterDistribution(Z, gamma, theta);
+}
+
+float incoherentScatterDistributionCompound(const char* chemForm, float gamma, float theta)
+{
+    return physics.incoherentScatterDistribution(chemForm, gamma, theta);
+}
+
+float coherentScatterDistributionCompound(const char* chemForm, float gamma, float theta)
+{
+    return physics.coherentScatterDistribution(chemForm, gamma, theta);
+}
+
+float incoherentScatterDistribution_normalizationFactor(float Z, float gamma)
+{
+    return physics.incoherentScatterDistribution_normalizationFactor(Z, gamma);
+}
+
+float coherentScatterDistribution_normalizationFactor(float Z, float gamma)
+{
+    return physics.coherentScatterDistribution_normalizationFactor(Z, gamma);
+}
+
+float incoherentScatterDistributionCompound_normalizationFactor(const char* chemForm, float gamma)
+{
+    return physics.incoherentScatterDistribution_normalizationFactor(chemForm, gamma);
+}
+
+float coherentScatterDistributionCompound_normalizationFactor(const char* chemForm, float gamma)
+{
+    return physics.coherentScatterDistribution_normalizationFactor(chemForm, gamma);
 }
 
 float meanEnergy(float* spectralResponse, float* gammas, int N)

@@ -7,6 +7,10 @@
 #include <omp.h>
 #endif
 
+#ifndef PI
+#define PI 3.1415926535897932385
+#endif
+
 XrayPhysics::XrayPhysics()
 {
     XraySourceModel.init(&xsecTables);
@@ -14,6 +18,11 @@ XrayPhysics::XrayPhysics()
 
 XrayPhysics::~XrayPhysics()
 {
+}
+
+float XrayPhysics::atomicMass(int Z)
+{
+    return xsecTables.getAtomicMass(Z);
 }
 
 bool XrayPhysics::simulateSpectra(float kVp, float takeOffAngle, int Z, float* gammas, int N, float* output)
@@ -349,6 +358,62 @@ float XrayPhysics::effectiveZ(const char* chemForm, float min_energy, float max_
     delete[] theWeights;
 
     return retVal;
+}
+
+float XrayPhysics::incoherentScatterDistribution(float Z, float gamma, float theta)
+{
+    if (xscatterTables.isInitialized() == false)
+        xscatterTables.init();
+    return xscatterTables.incoherentScatterDistribution(Z, gamma, theta*PI/180.0);
+}
+
+float XrayPhysics::coherentScatterDistribution(float Z, float gamma, float theta)
+{
+    if (xscatterTables.isInitialized() == false)
+        xscatterTables.init();
+    return xscatterTables.coherentScatterDistribution(Z, gamma, theta * PI / 180.0);
+}
+
+float XrayPhysics::incoherentScatterDistribution(const char* chemForm, float gamma, float theta)
+{
+    if (xscatterTables.isInitialized() == false)
+        xscatterTables.init();
+    return xscatterTables.incoherentScatterDistribution(chemForm, gamma, theta * PI / 180.0);
+}
+
+float XrayPhysics::coherentScatterDistribution(const char* chemForm, float gamma, float theta)
+{
+    if (xscatterTables.isInitialized() == false)
+        xscatterTables.init();
+    return xscatterTables.coherentScatterDistribution(chemForm, gamma, theta * PI / 180.0);
+}
+
+float XrayPhysics::incoherentScatterDistribution_normalizationFactor(float Z, float gamma)
+{
+    if (xscatterTables.isInitialized() == false)
+        xscatterTables.init();
+    return xscatterTables.incoherentScatterDistribution_normalizationFactor(Z, gamma);
+}
+
+float XrayPhysics::coherentScatterDistribution_normalizationFactor(float Z, float gamma)
+{
+    if (xscatterTables.isInitialized() == false)
+        xscatterTables.init();
+    return xscatterTables.coherentScatterDistribution_normalizationFactor(Z, gamma);
+}
+
+float XrayPhysics::incoherentScatterDistribution_normalizationFactor(const char* chemForm, float gamma)
+{
+    if (xscatterTables.isInitialized() == false)
+        xscatterTables.init();
+    return xscatterTables.incoherentScatterDistribution_normalizationFactor(chemForm, gamma);
+}
+
+float XrayPhysics::coherentScatterDistribution_normalizationFactor(const char* chemForm, float gamma)
+{
+    if (xscatterTables.isInitialized() == false)
+        xscatterTables.init();
+    return xscatterTables.coherentScatterDistribution_normalizationFactor(chemForm, gamma);
 }
 
 float XrayPhysics::transmission(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N)

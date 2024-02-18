@@ -34,13 +34,6 @@ const char elementSymbols[101][3] = { {'-'},{'H'},{'H','e'},{'L','i'},{'B','e'},
 
 xsec::xsec()
 {
-    // how to use:
-    // nonUniformCrossSectionLUTs LUTs;
-    // LUTreader.init(allParams->materialPropertiesFolder);
-    // LUTreader.calculateCrossSectionLUT(sigmaTotal_LUT);
-    // LUTreader.calculateCrossSectionLUT(sigmaCompton_LUT, nonUniformCrossSectionLUTs::INCOHERENT);
-    // LUTreader.calculateCrossSectionLUT(sigmaRayleigh_LUT, nonUniformCrossSectionLUTs::COHERENT);
-    
     logPhotoelectricCrossSections.clear();
     logPhotoelectricEnergies.clear();
     PhotoelectricEnergies.clear();
@@ -359,88 +352,142 @@ float xsec::logInterp(float interp_energy, float low_energy, float high_energy, 
     else
     {
         float m = (high_crossSect - low_crossSect) / (high_energy - low_energy);
-        //return exp(low_crossSect + m*(log(interp_energy) - low_energy));
         return exp(low_crossSect + m*(interp_energy - low_energy));
-        //return low_crossSect + m*(interp_energy - low_energy);
     }
 }
 
-float xsec::sigma(const char* chemForm, float theEnergy, int which)
+float* xsec::parseMaterialText(const char* material)
 {
-    float elementCount[101];
-    for (int i = 0; i <= 100; i++) elementCount[i] = 0.0;
+    string material_str = material;
+
+    // Remove spaces
+    std::string::iterator end_pos = std::remove(material_str.begin(), material_str.end(), ' ');
+    material_str.erase(end_pos, material_str.end());
     
-    // parse chemForm
-    string chemForm_str = chemForm;
-    vector<string> elementStrings = splitIntoElements(chemForm_str);
-    for (int i = 0; i < int(elementStrings.size()); i++)
+    if (findNextPlusSign(material_str) == string::npos)
+        return parseChemicalFormula(material);
+    else
     {
-        if (elementStrings[i].size() == 0)
-            return 0.0;
+        vector<string> fractionsAndFormulas = splitIntoMaterials(material_str);
+        if (fractionsAndFormulas.size() == 0)
+            return NULL;
 
-        string elementString = elementStrings[i];
-        string element;
-        string countStr;
+        //for (int n = 0; n < int(fractionsAndFormulas.size()); n++)
+        //    printf("%s\n", fractionsAndFormulas[n]);
 
-        if (elementString.size() == 1)
+        // Set chemFormulas and fracs
+        vector<string> chemFormulas;
+        float* fracs = (float*)malloc(size_t(int(fractionsAndFormulas.size())) * sizeof(float));
+        for (int n = 0; n < int(fractionsAndFormulas.size()); n++)
         {
-            element = elementString;
-        }
-        else
-        {
-            if (isalpha(elementString[1]))
+            //element = elementString.substr(0, 2);
+            //countStr = elementString.substr(2, elementString.size() - 2);
+
+            if (fractionsAndFormulas[n][0] == '*')
             {
-                element = elementString.substr(0, 2);
-                countStr = elementString.substr(2, elementString.size()-2);
+                free(fracs);
+                return NULL;
+            }
+
+            bool isValid = false;
+            for (int i = 0; i < int(fractionsAndFormulas[n].size()); i++)
+            {
+                if (fractionsAndFormulas[n][i] >= 'A' && fractionsAndFormulas[n][i] <= 'Z')
+                {
+                    if (i > 0)
+                    {
+                        if (fractionsAndFormulas[n][i - 1] == '*')
+                        {
+                            string frac_str = fractionsAndFormulas[n].substr(0, i - 1);
+                            fracs[n] = std::stof(frac_str);
+                        }
+                        else
+                        {
+                            string frac_str = fractionsAndFormulas[n].substr(0, i);
+                            fracs[n] = std::stof(frac_str);
+                        }
+                    }
+                    else
+                        fracs[n] = 1.0;
+                    isValid = true;
+                    string chemFormula = fractionsAndFormulas[n].substr(i, fractionsAndFormulas[n].size() - i);
+                    chemFormulas.push_back(chemFormula);
+                    break;
+                }
+            }
+            if (isValid == false)
+            {
+                free(fracs);
+                return NULL;
+            }
+        }
+
+        //for (int n = 0; n < int(fractionsAndFormulas.size()); n++)
+        //    printf("%s: %f\n", chemFormulas[n], fracs[n]);
+
+        float accum = 0.0;
+        for (int n = 0; n < int(chemFormulas.size()); n++)
+        {
+            accum += fracs[n];
+            if (fracs[n] <= 0.0)
+            {
+                accum = -1.0;
+                break;
+            }
+        }
+        if (accum <= 0.0)
+        {
+            free(fracs);
+            return NULL;
+        }
+
+        float* elementCount_weighted = (float*)calloc(size_t(101), sizeof(float));
+        for (int n = 0; n < int(chemFormulas.size()); n++)
+        {
+            fracs[n] = fracs[n] / accum;
+            float* elementCount = parseChemicalFormula(chemFormulas[n].c_str());
+            if (elementCount == NULL)
+            {
+                free(fracs);
+                free(elementCount_weighted);
+                return NULL;
             }
             else
             {
-                element = elementString.substr(0, 1);
-                countStr = elementString.substr(1, elementString.size() - 1);
+                // accumulate
+                float denom = 0.0;
+                for (int Z = 1; Z <= 100; Z++)
+                {
+                    if (elementCount[Z] > 0.0)
+                        denom += getAtomicMass(Z) * elementCount[Z];
+                }
+                for (int Z = 1; Z <= 100; Z++)
+                {
+                    if (elementCount[Z] > 0.0)
+                    {
+                        elementCount_weighted[Z] += fracs[n] / denom * elementCount[Z];
+                    }
+                }
             }
+            free(elementCount);
         }
 
-        int Z = elementStringToAtomicNumber(element);
-        float count = 1.0;
-        if (countStr.size() > 0)
-            count = std::stof(countStr);
-        elementCount[Z] = count;
-    }
-
-    /*
-    for (int i = 1; i <= 100; i++)
-    {
-        if (elementCount[i] > 0.0)
-            printf("%d: %f\n", i, elementCount[i]);
-    }
-    printf("energy = %f\n", theEnergy);
-    //*/
-
-    return sigma(elementCount, theEnergy, which);
-}
-
-float xsec::sigma(float* chemForm, float theEnergy, int which)
-{
-    float sumZ = 0.0;
-    float retVal = 0.0;
-    for (int i = 1; i <= 100; i++)
-    {
-        if (chemForm[i] > 0.0)
+        /*
+        for (int Z = 1; Z <= 100; Z++)
         {
-            sumZ += chemForm[i] * atomicMass[i];
-            retVal += atomicMass[i] * chemForm[i] * sigma(i, theEnergy, which);
+            if (elementCount_weighted[Z] > 0.0)
+                printf("%d: %f\n", Z, elementCount_weighted[Z]);
         }
-    }
-    retVal /= sumZ;
+        //*/
 
-    return retVal;
+        free(fracs);
+        return elementCount_weighted;
+    }
 }
 
-//####
-float xsec::sigma_e(const char* chemForm, float theEnergy, int which)
+float* xsec::parseChemicalFormula(const char* chemForm)
 {
-    float elementCount[101];
-    for (int i = 0; i <= 100; i++) elementCount[i] = 0.0;
+    float* elementCount = (float*)calloc(size_t(101), sizeof(float));
 
     // parse chemForm
     string chemForm_str = chemForm;
@@ -448,7 +495,11 @@ float xsec::sigma_e(const char* chemForm, float theEnergy, int which)
     for (int i = 0; i < int(elementStrings.size()); i++)
     {
         if (elementStrings[i].size() == 0)
-            return 0.0;
+        {
+            printf("Error parsing chemical formula!\n");
+            free(elementCount);
+            return NULL;
+        }
 
         string elementString = elementStrings[i];
         string element;
@@ -478,17 +529,49 @@ float xsec::sigma_e(const char* chemForm, float theEnergy, int which)
             count = std::stof(countStr);
         elementCount[Z] = count;
     }
+    return elementCount;
+}
 
-    /*
+float xsec::sigma(const char* chemForm, float theEnergy, int which)
+{
+    //float* elementCount = parseChemicalFormula(chemForm);
+    float* elementCount = parseMaterialText(chemForm);
+    if (elementCount == NULL)
+        return 0.0;
+
+    float retVal = sigma(elementCount, theEnergy, which);
+    free(elementCount);
+    return retVal;
+}
+
+float xsec::sigma(float* chemForm, float theEnergy, int which)
+{
+    float sumZ = 0.0;
+    float retVal = 0.0;
     for (int i = 1; i <= 100; i++)
     {
-        if (elementCount[i] > 0.0)
-            printf("%d: %f\n", i, elementCount[i]);
+        if (chemForm[i] > 0.0)
+        {
+            sumZ += chemForm[i] * atomicMass[i];
+            retVal += atomicMass[i] * chemForm[i] * sigma(i, theEnergy, which);
+        }
     }
-    printf("energy = %f\n", theEnergy);
-    //*/
+    retVal /= sumZ;
 
-    return sigma_e(elementCount, theEnergy, which);
+    return retVal;
+}
+
+//####
+float xsec::sigma_e(const char* chemForm, float theEnergy, int which)
+{
+    //float* elementCount = parseChemicalFormula(chemForm);
+    float* elementCount = parseMaterialText(chemForm);
+    if (elementCount == NULL)
+        return 0.0;
+
+    float retVal = sigma_e(elementCount, theEnergy, which);
+    free(elementCount);
+    return retVal;
 }
 
 float xsec::sigma_e(float* chemForm, float theEnergy, int which)
@@ -624,6 +707,16 @@ float xsec::sigma(int Z, float theEnergy, int which)
     return retVal;
 }
 
+size_t xsec::findNextPlusSign(string str, int pos)
+{
+    for (int i = pos; i < int(str.size()); i++)
+    {
+        if (str[i] == '+')
+            return size_t(i);
+    }
+    return string::npos;
+}
+
 size_t xsec::findNextCapitalLetter(string str, int pos)
 {
     for (int i = pos; i < int(str.size()); i++)
@@ -634,6 +727,42 @@ size_t xsec::findNextCapitalLetter(string str, int pos)
         //    return size_t(i);
     }
     return string::npos;
+}
+
+vector<string> xsec::splitIntoMaterials(string str)
+{
+    int ntokens = 100;
+    vector<string> tokens;
+    if (str.empty())
+        return tokens;
+
+    //size_t pos = findNextPlusSign(str, 0);
+    //if (pos != 0) // first letter must be capitalized
+    //    return tokens;
+    size_t pos = 0;
+
+    while (1)
+    {
+        size_t nextPos = findNextPlusSign(str, pos + 1);
+        if (nextPos == string::npos)
+        {
+            string temp = str.substr(pos, str.size() - pos);
+            tokens.push_back(temp);
+            break;
+        }
+        else
+        {
+            string temp = str.substr(pos, nextPos - pos);
+            tokens.push_back(temp);
+            pos = nextPos;
+        }
+
+        ntokens--;
+        if (ntokens <= 0)
+            break;
+    }
+
+    return tokens;
 }
 
 vector<string> xsec::splitIntoElements(string str)
@@ -667,46 +796,6 @@ vector<string> xsec::splitIntoElements(string str)
         if (ntokens <= 0)
             break;
     }
-
-    /*
-    size_t pos = 0;
-    size_t loc = findNextCapitalLetter(str, pos);
-
-    if (loc == string::npos)
-        return tokens;
-
-    string temp;
-    int num_tokens = 0;
-
-    while (pos != string::npos)
-    {
-        if ((loc - pos) != 0)
-        {
-            temp = str.substr(pos, loc - pos);
-            if (!temp.empty())
-            {
-                tokens.push_back(temp);
-                num_tokens++;
-            }
-        }
-
-        pos = (loc == string::npos ? loc : loc + 1);
-        loc = findNextCapitalLetter(str, pos);
-
-        if (num_tokens == ntokens - 1)
-            break;
-    }
-
-    if (pos != string::npos)
-    {
-        temp = str.substr(pos);
-        if (!temp.empty())
-        {
-            tokens.push_back(temp);
-            num_tokens++;
-        }
-    }
-    //*/
 
     return tokens;
 }

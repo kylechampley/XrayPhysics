@@ -150,6 +150,11 @@ class xrayPhysics:
         else:
             return 1.0
 
+    def atomicMass(self, Z):
+        self.libxrayphysics.atomicMass.restype = ctypes.c_float
+        self.libxrayphysics.atomicMass.argtypes = [ctypes.c_int]
+        return self.libxrayphysics.atomicMass(Z)
+
     def mu(self, Z, gamma, massDensity):
         return massDensity * self.sigma(Z, gamma)
         
@@ -350,6 +355,92 @@ class xrayPhysics:
                 retVal = self.libxrayphysics.sigmaTP(Z, gamma)
         retVal *= self.cross_section_scalar()
         return retVal
+        
+    def incoherentScatterDistribution(self, Z, gamma, theta, doNormalize=False):
+        #float incoherentScatterDistribution(int Z, float gamma, float theta)
+        if isinstance(Z, str):
+            chemicalFormula = Z
+            if sys.version_info[0] == 3:
+                chemicalFormula = bytes(str(chemicalFormula), 'ascii')
+            self.libxrayphysics.incoherentScatterDistributionCompound.restype = ctypes.c_float
+            self.libxrayphysics.incoherentScatterDistributionCompound.argtypes = [ctypes.c_char_p, ctypes.c_float, ctypes.c_float]
+            if type(theta) is np.ndarray:
+                retVal = theta.copy()
+                for n in range(theta.size):
+                    retVal[n] = self.libxrayphysics.incoherentScatterDistributionCompound(chemicalFormula, gamma, theta[n])
+            else:
+                retVal = self.libxrayphysics.incoherentScatterDistributionCompound(chemicalFormula, gamma, theta)
+        else:
+            self.libxrayphysics.incoherentScatterDistribution.restype = ctypes.c_float
+            self.libxrayphysics.incoherentScatterDistribution.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float]
+            if type(theta) is np.ndarray:
+                retVal = theta.copy()
+                for n in range(theta.size):
+                    retVal[n] = self.libxrayphysics.incoherentScatterDistribution(float(Z), gamma, theta[n])
+            else:
+                retVal = self.libxrayphysics.incoherentScatterDistribution(float(Z), gamma, theta)
+        retVal *= self.cross_section_scalar()
+        if doNormalize:
+            retVal = retVal / self.incoherentScatterDistribution_normalizationFactor(Z, gamma)
+        return retVal
+    
+    def coherentScatterDistribution(self, Z, gamma, theta, doNormalize=False):
+        #float coherentScatterDistribution(int Z, float gamma, float theta)
+        if isinstance(Z, str):
+            chemicalFormula = Z
+            if sys.version_info[0] == 3:
+                chemicalFormula = bytes(str(chemicalFormula), 'ascii')
+            self.libxrayphysics.coherentScatterDistributionCompound.restype = ctypes.c_float
+            self.libxrayphysics.coherentScatterDistributionCompound.argtypes = [ctypes.c_char_p, ctypes.c_float, ctypes.c_float]
+            if type(theta) is np.ndarray:
+                retVal = theta.copy()
+                for n in range(theta.size):
+                    retVal[n] = self.libxrayphysics.coherentScatterDistributionCompound(chemicalFormula, gamma, theta[n])
+            else:
+                retVal = self.libxrayphysics.coherentScatterDistributionCompound(chemicalFormula, gamma, theta)
+        else:
+            self.libxrayphysics.coherentScatterDistribution.restype = ctypes.c_float
+            self.libxrayphysics.coherentScatterDistribution.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float]
+            if type(theta) is np.ndarray:
+                retVal = theta.copy()
+                for n in range(theta.size):
+                    retVal[n] = self.libxrayphysics.coherentScatterDistribution(float(Z), gamma, theta[n])
+            else:
+                retVal = self.libxrayphysics.coherentScatterDistribution(float(Z), gamma, theta)
+        retVal *= self.cross_section_scalar()
+        if doNormalize:
+            retVal = retVal / self.coherentScatterDistribution_normalizationFactor(Z, gamma)
+        return retVal
+            
+    ###
+    def incoherentScatterDistribution_normalizationFactor(self, Z, gamma):
+        #float incoherentScatterDistribution(int Z, float gamma, float theta)
+        if isinstance(Z, str):
+            chemicalFormula = Z
+            if sys.version_info[0] == 3:
+                chemicalFormula = bytes(str(chemicalFormula), 'ascii')
+            self.libxrayphysics.incoherentScatterDistributionCompound_normalizationFactor.restype = ctypes.c_float
+            self.libxrayphysics.incoherentScatterDistributionCompound_normalizationFactor.argtypes = [ctypes.c_char_p, ctypes.c_float]
+            return self.libxrayphysics.incoherentScatterDistributionCompound_normalizationFactor(chemicalFormula, gamma) * self.cross_section_scalar()
+        else:
+            self.libxrayphysics.incoherentScatterDistribution_normalizationFactor.restype = ctypes.c_float
+            self.libxrayphysics.incoherentScatterDistribution_normalizationFactor.argtypes = [ctypes.c_float, ctypes.c_float]
+            return self.libxrayphysics.incoherentScatterDistribution_normalizationFactor(float(Z), gamma) * self.cross_section_scalar()
+    
+    def coherentScatterDistribution_normalizationFactor(self, Z, gamma):
+        #float coherentScatterDistribution(int Z, float gamma, float theta)
+        if isinstance(Z, str):
+            chemicalFormula = Z
+            if sys.version_info[0] == 3:
+                chemicalFormula = bytes(str(chemicalFormula), 'ascii')
+            self.libxrayphysics.coherentScatterDistributionCompound_normalizationFactor.restype = ctypes.c_float
+            self.libxrayphysics.coherentScatterDistributionCompound_normalizationFactor.argtypes = [ctypes.c_char_p, ctypes.c_float]
+            return self.libxrayphysics.coherentScatterDistributionCompound_normalizationFactor(chemicalFormula, gamma) * self.cross_section_scalar()
+        else:
+            self.libxrayphysics.coherentScatterDistribution_normalizationFactor.restype = ctypes.c_float
+            self.libxrayphysics.coherentScatterDistribution_normalizationFactor.argtypes = [ctypes.c_float, ctypes.c_float]
+            return self.libxrayphysics.coherentScatterDistribution_normalizationFactor(float(Z), gamma) * self.cross_section_scalar()
+    ###
     
     def simulateSpectra(self, kV, takeOffAngle=11.0, Z=74, gammas=None):
         #simulateSpectra(float kV, float takeOffAngle, int Z, float* gammas, int N, float* output)

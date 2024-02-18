@@ -15,8 +15,10 @@ endif()
 set(HEADER
   xrayphysics.h
   xsec.h
+  xscatter.h
   xrayphysics_c_interface.h
   xsec_raw.h
+  xscatter_raw.h
   xsource.h
   dual_energy_decomposition.h
 )
@@ -24,8 +26,10 @@ set(HEADER
 set(SRC_CPP
   xrayphysics.cpp
   xsec.cpp
+  xscatter.cpp
   xrayphysics_c_interface.cpp
   xsec_raw.cpp
+  xscatter_raw.cpp
   xsource.cpp
   dual_energy_decomposition.cpp
 )
