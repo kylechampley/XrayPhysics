@@ -5,6 +5,8 @@
 #pragma once
 #endif
 
+#define XRAY_PHYSICS_VERSION "1.1"
+
 #include "xsec.h"
 #include "xscatter.h"
 #include "xsource.h"
@@ -14,6 +16,8 @@ class XrayPhysics
 public:
     XrayPhysics();
     ~XrayPhysics();
+
+    const char* about();
 
     float atomicMass(int Z);
 

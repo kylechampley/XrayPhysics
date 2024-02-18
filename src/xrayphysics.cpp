@@ -20,6 +20,20 @@ XrayPhysics::~XrayPhysics()
 {
 }
 
+const char* XrayPhysics::about()
+{
+    printf("************************************\n");
+    printf("        XrayPhysics\n");
+    printf("        version %s\n", XRAY_PHYSICS_VERSION);
+    printf("      Based on EPDL97\n");
+    //printf("\n");
+    printf("compiled: %s %s\n", __DATE__, __TIME__);
+    printf("  written by: Kyle Champley\n");
+    printf("************************************\n");
+
+    return XRAY_PHYSICS_VERSION;
+}
+
 float XrayPhysics::atomicMass(int Z)
 {
     return xsecTables.getAtomicMass(Z);

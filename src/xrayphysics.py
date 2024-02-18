@@ -92,6 +92,10 @@ class xrayPhysics:
         self.detectorBits = 16
         self.length_units = 'cm'
 
+    def about(self):
+        """prints info about this package, including the version number"""
+        return self.libxrayphysics.about()
+
     def use_cm(self):
         """Call this function so that all units that use lengths are cm-based (this is the default setting)"""
         self.length_units = 'cm'

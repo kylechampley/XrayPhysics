@@ -10,6 +10,11 @@
 XrayPhysics physics;
 //xsecTables.init();
 
+void about()
+{
+    physics.about();
+}
+
 float atomicMass(int Z)
 {
     return physics.atomicMass(Z);

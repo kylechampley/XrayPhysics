@@ -10,6 +10,8 @@
     #define XRAYPHYSICS_API
 #endif
 
+extern "C" XRAYPHYSICS_API void about();
+
 extern "C" XRAYPHYSICS_API float atomicMass(int Z);
 
 extern "C" XRAYPHYSICS_API bool simulateSpectra(float kVp, float takeOffAngle, int Z, float* gammas, int N, float* output);

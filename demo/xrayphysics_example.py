@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from xrayphysics import *
 physics = xrayPhysics()
 
+# The next line prints out the version number and some other information about this package
+#physics.about()
+
 whichPlot = 2
 
 
