@@ -1,5 +1,15 @@
 XrayPhysics Python Interface
 ============================
 
-.. automodule:: xrayphysics
-   :members:
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+   
+   install
+   highlevelfunctions
+   crosssections
+   spectramodeling
+   utility
+   bhc
+   ded
+   
