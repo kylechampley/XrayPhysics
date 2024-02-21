@@ -20,7 +20,6 @@ class xrayPhysics:
         else:
             current_dir = os.path.abspath(os.path.dirname(__file__))
 
-        #'''
         if _platform == "linux" or _platform == "linux2":
             import readline
             from ctypes import cdll
@@ -79,21 +78,6 @@ class xrayPhysics:
                 print('or')
                 print(fullPath_backup)
                 self.libxrayphysics = None
-        #'''
-
-        '''
-        if _platform == "linux" or _platform == "linux2":
-            import readline
-            from ctypes import cdll
-            self.libxrayphysics = cdll.LoadLibrary(os.path.join(current_dir, "../build/lib/libxrayphysics.so"))
-        elif _platform == "win32":
-            from ctypes import windll
-            self.libxrayphysics = windll.LoadLibrary(os.path.join(current_dir, r'..\win_build\bin\Release\libxrayphysics.dll'))
-        elif _platform == "darwin":  # Darwin is the name for MacOS in Python's platform module
-            from ctypes import cdll
-            # Adjust the path to where your .dylib file is located
-            self.libxrayphysics = cdll.LoadLibrary(os.path.join(current_dir, "../build/lib/libxrayphysics.dylib"))
-        #'''
             
         self.detectorBits = 16
         self.length_units = 'cm'
