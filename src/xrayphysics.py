@@ -93,7 +93,7 @@ class xrayPhysics:
         self.length_units = 'cm'
 
     def about(self):
-        """prints info about this package, including the version number"""
+        """Prints info about this package, including the version number"""
         return self.libxrayphysics.about()
 
     def use_cm(self):
@@ -155,29 +155,37 @@ class xrayPhysics:
             return 1.0
 
     def atomicMass(self, Z):
+        """Returns the atomic mass of the given atomic number"""
         self.libxrayphysics.atomicMass.restype = ctypes.c_float
         self.libxrayphysics.atomicMass.argtypes = [ctypes.c_int]
         return self.libxrayphysics.atomicMass(Z)
 
     def mu(self, Z, gamma, massDensity):
+        """Returns the Linear Attenuation Coefficient (LAC) of the given material"""
         return massDensity * self.sigma(Z, gamma)
         
     def muPE(self, Z, gamma, massDensity):
+        """Returns the Photoelectric component of the Linear Attenuation Coefficient (LAC) of the given material"""
         return massDensity * self.sigmaPE(Z, gamma)
         
     def muCS(self, Z, gamma, massDensity):
+        """Returns the Compton Scatter component of the Linear Attenuation Coefficient (LAC) of the given material"""
         return massDensity * self.sigmaCS(Z, gamma)
         
     def muRS(self, Z, gamma, massDensity):
+        """Returns the Rayleigh Scatter component of the Linear Attenuation Coefficient (LAC) of the given material"""
         return massDensity * self.sigmaRS(Z, gamma)
         
     def muPP(self, Z, gamma, massDensity):
+        """Returns the Pair Production component of the Linear Attenuation Coefficient (LAC) of the given material"""
         return massDensity * self.sigmaPP(Z, gamma)
         
     def muTP(self, Z, gamma, massDensity):
+        """Returns the Triplet Production component of the Linear Attenuation Coefficient (LAC) of the given material"""
         return massDensity * self.sigmaTP(Z, gamma)
 
     def sigma(self, Z, gamma):
+        """Returns the mass cross section of the given material"""
         if isinstance(Z, str):
             chemicalFormula = Z
             if sys.version_info[0] == 3:
@@ -203,6 +211,7 @@ class xrayPhysics:
         return retVal
                 
     def sigma_e(self, Z, gamma):
+        """Returns the electron cross section of the given material"""
         if isinstance(Z, str):
             chemicalFormula = Z
             if sys.version_info[0] == 3:
@@ -228,14 +237,17 @@ class xrayPhysics:
         return retVal
 
     def rhoe(self, Z, massDensity):
+        """Returns the electron density of the given material"""
         #massDensity * sigma = rhoe*sigma_e
         return massDensity * self.sigma(Z, 1.0) / self.sigma_e(Z, 1.0)
         
     def rho(self, Z, electronDensity):
+        """Returns the mass density of the given material"""
         #rho * sigma = rhoe*sigma_e
         return electronDensity * self.sigma_e(Z, 1.0) / self.sigma(Z, 1.0)
         
     def sigmaPE(self, Z, gamma):
+        """Returns the Photoelectric component of the mass cross section of the given material"""
         if isinstance(Z, str):
             chemicalFormula = Z
             if sys.version_info[0] == 3:
@@ -261,6 +273,7 @@ class xrayPhysics:
         return retVal
             
     def sigmaCS(self, Z, gamma):
+        """Returns the Compton Scatter component of the mass cross section of the given material"""
         if isinstance(Z, str):
             chemicalFormula = Z
             if sys.version_info[0] == 3:
@@ -286,6 +299,7 @@ class xrayPhysics:
         return retVal
         
     def sigmaRS(self, Z, gamma):
+        """Returns the Rayleigh Scatter component of the mass cross section of the given material"""
         if isinstance(Z, str):
             chemicalFormula = Z
             if sys.version_info[0] == 3:
@@ -311,6 +325,7 @@ class xrayPhysics:
         return retVal
             
     def sigmaPP(self, Z, gamma):
+        """Returns the Pair Production component of the mass cross section of the given material"""
         if isinstance(Z, str):
             chemicalFormula = Z
             if sys.version_info[0] == 3:
@@ -336,6 +351,7 @@ class xrayPhysics:
         return retVal
             
     def sigmaTP(self, Z, gamma):
+        """Returns the Triplet Production component of the mass cross section of the given material"""
         if isinstance(Z, str):
             chemicalFormula = Z
             if sys.version_info[0] == 3:
@@ -359,8 +375,13 @@ class xrayPhysics:
                 retVal = self.libxrayphysics.sigmaTP(Z, gamma)
         retVal *= self.cross_section_scalar()
         return retVal
-        
+    
+    def ComptonScatterDistribution(self, Z, gamma, theta, doNormalize=False):
+        """Returns the Compton Scatter distribution of the given material"""
+        return self.incoherentScatterDistribution(Z, gamma, theta, doNormalize)
+    
     def incoherentScatterDistribution(self, Z, gamma, theta, doNormalize=False):
+        """Returns the Incoherent Scatter distribution of the given material"""
         #float incoherentScatterDistribution(int Z, float gamma, float theta)
         if isinstance(Z, str):
             chemicalFormula = Z
@@ -388,7 +409,12 @@ class xrayPhysics:
             retVal = retVal / self.incoherentScatterDistribution_normalizationFactor(Z, gamma)
         return retVal
     
+    def RayleighScatterDistribution(self, Z, gamma, theta, doNormalize=False):
+        """Returns the Rayleigh Scatter distribution of the given material"""
+        return self.coherentScatterDistribution(Z, gamma, theta, doNormalize)
+    
     def coherentScatterDistribution(self, Z, gamma, theta, doNormalize=False):
+        """Returns the Coherent Scatter distribution of the given material"""
         #float coherentScatterDistribution(int Z, float gamma, float theta)
         if isinstance(Z, str):
             chemicalFormula = Z
@@ -417,7 +443,12 @@ class xrayPhysics:
         return retVal
             
     ###
+    def ComptonScatterDistribution_normalizationFactor(self, Z, gamma):
+        """Returns the Compton Scatter distribution normalization factor of the given material"""
+        return self.incoherentScatterDistribution_normalizationFactor(Z, gamma)
+    
     def incoherentScatterDistribution_normalizationFactor(self, Z, gamma):
+        """Returns the Incoherent Scatter distribution normalization factor of the given material"""
         #float incoherentScatterDistribution(int Z, float gamma, float theta)
         if isinstance(Z, str):
             chemicalFormula = Z
@@ -431,7 +462,12 @@ class xrayPhysics:
             self.libxrayphysics.incoherentScatterDistribution_normalizationFactor.argtypes = [ctypes.c_float, ctypes.c_float]
             return self.libxrayphysics.incoherentScatterDistribution_normalizationFactor(float(Z), gamma) * self.cross_section_scalar()
     
+    def RayleighScatterDistribution_normalizationFactor(self, Z, gamma):
+        """Returns the Rayleigh Scatter distribution normalization factor of the given material"""
+        return self.coherentScatterDistribution_normalizationFactor(Z, gamma)
+    
     def coherentScatterDistribution_normalizationFactor(self, Z, gamma):
+        """Returns the Coherent Scatter distribution normalization factor of the given material"""
         #float coherentScatterDistribution(int Z, float gamma, float theta)
         if isinstance(Z, str):
             chemicalFormula = Z
@@ -447,6 +483,7 @@ class xrayPhysics:
     ###
     
     def simulateSpectra(self, kV, takeOffAngle=11.0, Z=74, gammas=None):
+        """x-ray source spectra model"""
         #simulateSpectra(float kV, float takeOffAngle, int Z, float* gammas, int N, float* output)
         
         if gammas is None:
@@ -468,6 +505,7 @@ class xrayPhysics:
         return gammas, sourceSpectrum
         
     def changeTakeOffAngle(self, kVp, takeOffAngle_cur, takeOffAngle_new, Z, gammas, spectrum_cur):
+        """Change the anode take-off angle of a given x-ray source spectra model"""
         #bool changeTakeOffAngle(float kVp, float takeOffAngle_cur, float takeOffAngle_new, int Z, float* gammas, int N, float* s)
         self.libxrayphysics.changeTakeOffAngle.restype = ctypes.c_bool
         self.libxrayphysics.changeTakeOffAngle.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_int, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS")]
@@ -476,28 +514,33 @@ class xrayPhysics:
         return spectrum_new
         
     def detectorResponse(self, chemicalFormula, density, thickness, gammas):
+        """Analytic detector response model"""
         detResp = np.ascontiguousarray(np.zeros(gammas.size), dtype=np.float32)
         for n in range(gammas.size):
             detResp[n] = gammas[n]*(1.0-np.exp(-self.mu(chemicalFormula, gammas[n], density)*thickness))
         return detResp
         
     def filterResponse(self, chemicalFormula, density, thickness, gammas):
+        """X-ray Filter response model"""
         filtResp = np.ascontiguousarray(np.zeros(gammas.size), dtype=np.float32)
         for n in range(gammas.size):
             filtResp[n] = np.exp(-self.mu(chemicalFormula, gammas[n], density)*thickness)
         return filtResp
         
     def meanEnergy(self, spectralResponse, gammas):
+        """Calculates the mean energy of a given spectra"""
         self.libxrayphysics.meanEnergy.restype = ctypes.c_float
         self.libxrayphysics.meanEnergy.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
         return self.libxrayphysics.meanEnergy(spectralResponse, gammas, gammas.size)
         
     def normalizeSpectrum(self, spectralResponse, gammas):
+        """Normalizes the given spectra"""
         self.libxrayphysics.normalizeSpectrum.restype = ctypes.c_bool
         self.libxrayphysics.normalizeSpectrum.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
         return self.libxrayphysics.normalizeSpectrum(spectralResponse, gammas, gammas.size)
         
     def effectiveZ(self, chemicalFormula, min_energy=10.0, max_energy=100.0, arealDensity=0.0):
+        """Calculate the effective atomic number of a material"""
         if isinstance(chemicalFormula, str):
             if sys.version_info[0] == 3:
                 chemicalFormula = bytes(str(chemicalFormula), 'ascii')
@@ -510,6 +553,7 @@ class xrayPhysics:
             return 0.0
         
     def effectiveAttenuation(self, Z, density, thickness, spectralResponse, gammas):
+        """Calculate the effective attenuation of a material"""
         #float effectiveAttenuation(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N);
         if isinstance(Z, str):
             chemicalFormula = Z
@@ -524,6 +568,7 @@ class xrayPhysics:
             return self.libxrayphysics.effectiveAttenuation(Z, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
     
     def effectiveEnergy(self, Z, density, thickness, spectralResponse, gammas):
+        """Calculate the effective energy of a material"""
         #float effectiveEnergy(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N);
         if isinstance(Z, str):
             chemicalFormula = Z
@@ -538,6 +583,7 @@ class xrayPhysics:
             return self.libxrayphysics.effectiveEnergy(Z, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
             
     def transmission(self, Z, density, thickness, spectralResponse, gammas):
+        """Calculate the transmission through a given material"""
         #float transmission(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N);
         if isinstance(Z, str):
             chemicalFormula = Z
@@ -552,6 +598,7 @@ class xrayPhysics:
             return self.libxrayphysics.transmission(Z, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
             
     def setBHlookupTable(self, spectralResponse, gammas, Z, referenceEnergy=0.0, T_atten=0.0, N_atten=0):
+        """Calculate a beam hardening transfer function of a given material"""
         if N_atten <= 0 or T_atten <= 0.0:
             max_lac = 48.0
             T_atten = 1.0e-3 # about 66 counts max
@@ -582,6 +629,7 @@ class xrayPhysics:
         return LUT, T_atten
 
     def setBHClookupTable(self, spectralResponse, gammas, Z, referenceEnergy=0.0, T_atten=0.0, N_atten=0):
+        """Calculate a beam hardening correction transfer function of a given material"""
         #bool setBHClookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_atten, int N_atten, float referenceEnergy);
         
         if N_atten <= 0 or T_atten <= 0.0:
@@ -614,6 +662,7 @@ class xrayPhysics:
         return LUT, T_atten
         
     def polynomialBHC(self, spectralResponse, gammas, Z, density, referenceEnergy=0.0, maxThickness=10.0, order=2):
+        """Calculate the coefficients of a polynomial-based beam hardening correction transfer function of a given material"""
         order = max(1, min(order, 10))
         if maxThickness <= 0.0:
             return None
@@ -642,6 +691,7 @@ class xrayPhysics:
         return np.concatenate((np.zeros((1,1)),np.matmul(np.linalg.inv(A), b)))
         
     def setTwoMaterialBHClookupTable(self, spectralResponse, gammas, sigma_1, sigma_2, referenceEnergy=None, T_atten=0.0, N_atten=0):
+        """Calculate a two-material beam hardening correction transfer function of the two given materials"""
         N = gammas.size
         if spectralResponse.size != N or sigma_1.size != N or sigma_2.size != N:
             print('Error: Input arrays must all be the same size!')
@@ -667,6 +717,7 @@ class xrayPhysics:
         return LUT, T_atten
         
     def setDEDlookupTable(self, spectralResponse_L, spectralResponse_H, gammas, basisFunction_1, basisFunction_2, referenceEnergies=None, T_atten=0.0, N_atten=0):
+        """Calculate a dual energy decomposition transfer function"""
         #bool generateDEDlookUpTables(float* spectralResponses, float* gammas, int N_gamma, float* referenceEnergies, float* basisFunctions, float* LUT, float T_lac, int N_lac);
         
         N = gammas.size
@@ -705,12 +756,14 @@ class xrayPhysics:
         return LUT, T_atten
         
     def PhotoelectricBasis(self, gammas):
+        """Returns the photoelectric basis function"""
         basisFcn = gammas.copy()
         basisFcn[:] = gammas[:]**-3.0
         basisFcn *= self.cross_section_scalar()
         return basisFcn
         
     def ComptonBasis(self, gammas):
+        """Returns the Compton basis function"""
         ELECTRON_REST_MASS_ENERGY = 510.975
         CLASSICAL_ELECTRON_RADIUS = 2.8179403267e-13
         AVOGANDROS_NUMBER = 6.0221414107e23
@@ -726,6 +779,7 @@ class xrayPhysics:
         return basisFcn
     
     def PCAbases(self, listOfMaterials, gammas):
+        """Returns the two basis functions derived from the PCA of several material cross sections"""
         N = len(listOfMaterials)
         X = np.zeros((N,gammas.size))
         for n in range(N):
