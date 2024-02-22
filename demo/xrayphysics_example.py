@@ -8,21 +8,22 @@ physics = xrayPhysics()
 # The next line prints out the version number and some other information about this package
 #physics.about()
 
-whichPlot = 2
+whichPlot = 10
 
 
 #########################################################################################
 # Example 1: Getting linear attenuation coefficients for a compound
 #########################################################################################
 # Set a numpy array of the x-ray energies
-gammas = np.array(range(20,100),dtype=np.float32)+1.0
+gammas = np.array(range(20,100))+1.0
 
 # Set the LAC (cm^-1) of water and its components
 chemForm = 'H2O'
-mu_water = physics.mu(chemForm,gammas,1.0)
-mu_water_PE = physics.muPE(chemForm,gammas,1.0)
-mu_water_CS = physics.muCS(chemForm,gammas,1.0)
-mu_water_RS = physics.muRS(chemForm,gammas,1.0)
+density = 1.0
+mu_water = physics.mu(chemForm,gammas,density)
+mu_water_PE = physics.muPE(chemForm,gammas,density)
+mu_water_CS = physics.muCS(chemForm,gammas,density)
+mu_water_RS = physics.muRS(chemForm,gammas,density)
 
 # Plot results
 if whichPlot == 1:
@@ -38,7 +39,7 @@ if whichPlot == 1:
 # Example 2: Calculate cross section of bone by mass fractions
 #########################################################################################
 if whichPlot == 2:
-    gammas = np.array(range(20,100),dtype=np.float32)+1.0
+    gammas = np.array(range(20,100))+1.0
 
     # Mass Density of Bone (g/cm^3)    
     massDensity = 1.85
@@ -177,4 +178,26 @@ if whichPlot == 9:
     plt.xlabel('angle (degrees)')
     plt.ylabel('normalized differential cross section')
     plt.xlim((0.0,180.0))
+    plt.show()
+
+
+#########################################################################################
+# Example 10: Material Library
+#########################################################################################
+# All functions demonstrated above that take a chemical formula as an input can also take
+# the material name of a material in the material list that is defined at the end of xrayphysics.py
+# One can retrieve the chemical formula and mass density by material names
+# To see the whole list of items in the material library, use the following:
+#physics.print_material_library()
+
+# Now let's demonstrate how this works
+if whichPlot == 10:
+    materialName = 'lung'
+    #materialName = 'bone_compact'
+    gammas = np.array(range(20,100))+1.0
+    
+    plt.plot(gammas, physics.mu(materialName, gammas))
+    plt.title(str(materialName) + ' LAC')
+    plt.xlabel('x-ray energy (keV)')
+    plt.ylabel('linear attenuation coefficient (cm^-1)')
     plt.show()

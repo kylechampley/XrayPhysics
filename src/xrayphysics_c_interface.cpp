@@ -20,6 +20,17 @@ float atomicMass(int Z)
     return physics.atomicMass(Z);
 }
 
+float massDensity(int Z)
+{
+    return physics.xsecTables.getMassDensity(Z);
+}
+
+int elementSymbolToAtomicNumber(const char* chemForm)
+{
+    string chemForm_str = chemForm;
+    return physics.xsecTables.elementStringToAtomicNumber(chemForm_str);
+}
+
 bool simulateSpectra(float kVp, float takeOffAngle, int Z, float* gammas, int N, float* output)
 {
     return physics.simulateSpectra(kVp, takeOffAngle, Z, gammas, N, output);

@@ -13,6 +13,8 @@
 extern "C" XRAYPHYSICS_API void about();
 
 extern "C" XRAYPHYSICS_API float atomicMass(int Z);
+extern "C" XRAYPHYSICS_API float massDensity(int Z);
+extern "C" XRAYPHYSICS_API int elementSymbolToAtomicNumber(const char* chemForm);
 
 extern "C" XRAYPHYSICS_API bool simulateSpectra(float kVp, float takeOffAngle, int Z, float* gammas, int N, float* output);
 extern "C" XRAYPHYSICS_API bool changeTakeOffAngle(float kVp, float takeOffAngle_cur, float takeOffAngle_new, int Z, float* gammas, int N, float* s);
