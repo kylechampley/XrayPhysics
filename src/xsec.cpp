@@ -528,7 +528,7 @@ float* xsec::parseChemicalFormula(const char* chemForm)
         float count = 1.0;
         if (countStr.size() > 0)
             count = std::stof(countStr);
-        elementCount[Z] = count;
+        elementCount[Z] += count;
     }
     return elementCount;
 }
