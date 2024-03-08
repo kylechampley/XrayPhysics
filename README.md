@@ -31,8 +31,13 @@ XrayPhysics is distributed under the terms of the MIT license. All new contribut
 See [LICENSE](LICENSE) for more details.  
 SPDX-License-Identifier: MIT  
 
-Please cite our work by referencing this github page and the following [paper](https://ieeexplore.ieee.org/document/8638824):
+Please cite our work by referencing this github page and the following papers:  
 
+[SIRZ](https://ieeexplore.ieee.org/document/8638824)  
 Champley, Kyle M., Stephen G. Azevedo, Isaac M. Seetho, Steven M. Glenn, Larry D. McMichael, Jerel A. Smith, Jeffrey S. Kallman, William D. Brown, and Harry E. Martz. "Method to extract system-independent material properties from dual-energy X-ray CT." IEEE Transactions on Nuclear Science 66, no. 3 (2019): 674-686.
 
+[BHC](https://www.osti.gov/servlets/purl/1158895)  
+Kyle Champley and Timo Bremer. ”Efficient and Accurate Correction of
+Beam Hardening Artifacts.”, 3rd International Congress on Image Formation
+in X-ray CT, 2014.
 
