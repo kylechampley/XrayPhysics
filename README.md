@@ -1,5 +1,5 @@
 # XrayPhysics
-This is a C/C++ library with Python bindings with the following capabilities:
+This is a C/C++ library (Linux, Windows, Mac) with Python bindings with the following capabilities:
 1) x-ray cross sections (energies from 1 keV to 20 MeV and elements 1-100) specified by chemical formula or element/compound mass fractions
 2) incoherent and coherent x-ray scattering angle distributions specified by chemical formula or element/compound mass fractions
 3) x-ray source spectra modeling (for any source voltage and take-off angle, and the following anode types: Cu, Mo, W, Au)
