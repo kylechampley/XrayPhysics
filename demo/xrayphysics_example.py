@@ -8,7 +8,7 @@ physics = xrayPhysics()
 # The next line prints out the version number and some other information about this package
 #physics.about()
 
-whichPlot = 10
+whichPlot = 9
 
 
 #########################################################################################
@@ -166,10 +166,11 @@ dsigma_coh = physics.coherentScatterDistribution('H2O', 60.0, thetas, doNormaliz
 if whichPlot == 9:
     plt.figure(figsize=(10,5))
     plt.subplot(1, 2, 1)
-    plt.plot(thetas, dsigma_incoh)
+    plt.plot(thetas, dsigma_incoh, thetas, physics.KleinNishinaScatterDistribution(60.0, thetas, True))
     plt.title('Incoherent (Compton) Scatter Distributions')
     plt.xlabel('angle (degrees)')
     plt.ylabel('normalized differential cross section')
+    plt.legend(['true distribution','Klein-Nishina approximation'])
     plt.xlim((0.0,180.0))
     
     plt.subplot(1, 2, 2)

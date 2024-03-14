@@ -750,6 +750,25 @@ class xrayPhysics:
             self.libxrayphysics.coherentScatterDistribution_normalizationFactor.restype = ctypes.c_float
             self.libxrayphysics.coherentScatterDistribution_normalizationFactor.argtypes = [ctypes.c_float, ctypes.c_float]
             return self.libxrayphysics.coherentScatterDistribution_normalizationFactor(float(Z), gamma) * self.cross_section_scalar()
+    
+    def KleinNishinaScatterDistribution(self, gamma, theta, doNormalize=False):
+        ELECTRON_REST_MASS_ENERGY = 510.975
+        CLASSICAL_ELECTRON_RADIUS = 2.8179403267e-13
+        AVOGANDROS_NUMBER = 6.0221414107e23
+        KNconstant = CLASSICAL_ELECTRON_RADIUS*CLASSICAL_ELECTRON_RADIUS*AVOGANDROS_NUMBER
+        cos_theta = np.cos(theta*np.pi/180.0)
+        P = 1.0 / (1.0 + (gamma / ELECTRON_REST_MASS_ENERGY) * (1.0 - cos_theta))
+        retVal = 0.5 * P * P * (P + 1.0 / P - 1.0 + cos_theta * cos_theta) / (self.ComptonBasis(gamma) / KNconstant)
+        if doNormalize:
+            return retVal / self.KleinNishinaScatterDistribution_normalizationFactor(gamma)
+        else:
+            return retVal
+        
+    def KleinNishinaScatterDistribution_normalizationFactor(self, gamma):
+        thetas = np.linspace(0.0, 180.0, 1800)
+        KN = self.KleinNishinaScatterDistribution(gamma, thetas, False)
+        return np.sum(KN*np.sin(thetas*np.pi/180.0)*2.0*np.pi*np.pi/180.0*0.1)
+        
     ###
     
     def simulateSpectra(self, kV, takeOffAngle=11.0, Z=74, gammas=None):
@@ -1271,7 +1290,10 @@ class xrayPhysics:
         KNconstant = CLASSICAL_ELECTRON_RADIUS*CLASSICAL_ELECTRON_RADIUS*AVOGANDROS_NUMBER
         two_PI_KNconstant = 2.0*np.pi*KNconstant
     
-        alpha = gammas.copy() / ELECTRON_REST_MASS_ENERGY
+        if type(gammas) is np.ndarray:
+            alpha = gammas.copy() / ELECTRON_REST_MASS_ENERGY
+        else:
+            alpha = gammas / ELECTRON_REST_MASS_ENERGY
         one_plus_two_alpha = 1.0+2.0*alpha
         log_term = np.log(one_plus_two_alpha)
         basisFcn = (1.0+one_plus_two_alpha)/(2.0*one_plus_two_alpha*one_plus_two_alpha) + ((alpha*alpha-1.0-one_plus_two_alpha)*log_term + 4.0*alpha)/(2.0*alpha*alpha*alpha) * two_PI_KNconstant
