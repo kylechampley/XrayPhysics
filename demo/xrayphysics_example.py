@@ -109,7 +109,7 @@ if whichPlot == 4:
     plt.plot(thicknesses, e_effs, 'k-')
     plt.title('Effective Energy (keV)')
     plt.xlabel('thickness (cm)')
-    plt.ylabel('LAC (cm^-1)')
+    plt.ylabel('x-ray energy (keV)')
     plt.show()
 
 
