@@ -153,6 +153,39 @@ class xrayPhysics:
         if type(x) is np.ndarray:
             x = np.ascontiguousarray(x, dtype=np.float32)
         return x
+        
+    def resample(self, gammas, s, gammas_out):
+        """Resamples the binning array on which a spectra is defined
+        
+        Args:
+            gammas (numpy array): the energy samples (keV) of the given spectra
+            s (numpy array): the given spectra to resample
+            gammmas_out (numpy array): the energy samples (keV) to rebin to
+        
+        Returns:
+            resampled spectra
+        """
+        s_out = gammas_out.copy()
+        
+        in_hi = 0.5*(gammas + np.roll(gammas,-1))
+        in_hi[-1] = gammas[-1]+0.5*(gammas[-1]-gammas[-2])
+        
+        in_lo = 0.5*(np.roll(gammas,1) + gammas)
+        in_lo[0] = max(0.0, gammas[0]-0.5*(gammas[1]-gammas[0]))
+        
+        out_hi = 0.5*(gammas_out + np.roll(gammas_out,-1))
+        out_hi[-1] = gammas_out[-1]+0.5*(gammas_out[-1]-gammas_out[-2])
+        
+        out_lo = 0.5*(np.roll(gammas_out,1) + gammas_out)
+        out_lo[0] = max(0.0, gammas_out[0]-0.5*(gammas_out[1]-gammas_out[0]))
+        
+        s_out[:] = 0.0
+        for i in range(gammas_out.size):
+            for j in range(gammas.size):
+                intersection = max(0.0, min(out_hi[i], in_hi[j]) - max(out_lo[i], in_lo[j]))
+                s_out[i] += intersection * s[j]
+        
+        return s_out
 
     def elementSymbolToAtomicNumber(self, elementStr):
         if sys.version_info[0] == 3:
