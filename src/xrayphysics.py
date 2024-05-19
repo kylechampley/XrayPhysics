@@ -814,7 +814,7 @@ class xrayPhysics:
             gammas (numpy array): the energies for which to model the spectra, if unspecified uses default values
             
         Returns:
-            The x-ray source spectra model
+            x-ray energy samples, x-ray source spectra model
         
         """
         #simulateSpectra(float kV, float takeOffAngle, int Z, float* gammas, int N, float* output)
@@ -933,6 +933,77 @@ class xrayPhysics:
         self.libxrayphysics.normalizeSpectrum.restype = ctypes.c_bool
         self.libxrayphysics.normalizeSpectrum.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
         return self.libxrayphysics.normalizeSpectrum(spectralResponse, gammas, gammas.size)
+
+    def load_spectra(self, fileName):
+        """Load spectra from file (txt or npy)
+
+        This function loads two columns of data.  In the context of this software, the first column are the x-ray energies
+        and the second column is either the spectra, detector response, LAC values, etc.  This data can either be (N,2) data
+        stored in an npy file or an acsii file of two columns of numbers which is a common format used to store spectra in a file.
+        
+        Args:
+            fileName (str): name of file where spectra information is stored
+            
+        Returns:
+            x-ray energy samples, x-ray source spectra model
+        
+        """
+        if fileName.endswith('.npy'):
+            data = np.load(fileName)
+            if len(data.shape) != 2:
+                print('Error: invalid file format!')
+                return None, None
+            Es = np.array(data[:,0],dtype=np.float32)
+            s = np.array(data[:,1],dtype=np.float32)
+            return Es, s
+        else:
+            data = []
+            try:
+                with open(fileName, 'r') as file:
+                    for line in file:
+                        if line[0] != '#':
+                            two_numbers = [float(num) for num in line.split()]
+                            if len(two_numbers) != 2:
+                                print('Error: invalid spectra file format, must be two columns of numbers!')
+                                return None, None
+                            data.append(two_numbers)
+            except FileNotFoundError:
+                print('Error: failed to open the file ', fileName)
+                return None, None
+            except Exception as e:
+                print('Error occured while loading the data', str(e))
+                return None, None
+            
+            data = np.array(data)
+            Es = np.array(data[:,0],dtype=np.float32)
+            s = np.array(data[:,1],dtype=np.float32)
+            return Es, s
+        
+    def save_spectra(self, fileName, spectralResponse, gammas):
+        """Save spectra to file (txt or npy)
+        
+        This function saves two columns of data.  In the context of this software, the first column are the x-ray energies
+        and the second column is either the spectra, detector response, LAC values, etc.  This data can either be (N,2) data
+        stored in an npy file or an acsii file of two columns of numbers which is a common format used to store spectra in a file.
+        
+        Args:
+            fileName (str): name of file where spectra information is to be saved
+            spectralResponse (float 32 numpy array): the x-ray spectra, detector response, LAC values, etc.
+            gammas (float 32 numpy array): the x-ray energy samples (keV)
+        """
+        if fileName.endswith('.npy'):
+            data = np.zeros((spectralResponse.size,2),dtype=np.float32)
+            data[:,0] = gammas
+            data[:,1] = spectralResponse
+            np.save(fileName, data)
+        else:
+            try:
+                with open(fileName, 'w') as file:
+                    for n in range(spectralResponse.size):
+                        line = str(gammas[n]) + ' ' + str("{:e}".format(spectralResponse[n])) + '\n'
+                        file.write(line)
+            except Exception as e:
+                print('Error occured while loading the data', str(e))
         
     def effectiveZ(self, chemicalFormula, min_energy=10.0, max_energy=100.0, arealDensity=0.0):
         """Calculate the effective atomic number of a material
