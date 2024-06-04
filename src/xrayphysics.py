@@ -805,7 +805,7 @@ class xrayPhysics:
     ###
     
     def simulateSpectra(self, kV, takeOffAngle=11.0, Z=74, gammas=None):
-        """x-ray source spectra model
+        r"""x-ray source spectra model
         
         Args:
             kV (scalar): voltage of a bremsstrahlung spectrum
@@ -840,7 +840,7 @@ class xrayPhysics:
         return gammas, sourceSpectrum
         
     def changeTakeOffAngle(self, kV, takeOffAngle_cur, takeOffAngle_new, Z, gammas, spectrum_cur):
-        """Change the anode take-off angle of a given x-ray source spectra model
+        r"""Change the anode take-off angle of a given x-ray source spectra model
         
         Args:
             kv (scalar):
@@ -864,7 +864,16 @@ class xrayPhysics:
         return spectrum_new
         
     def detectorResponse(self, chemicalFormula, density, thickness, gammas):
-        """Analytic detector response model
+        r"""Analytic detector response model
+        
+        The model is given by
+        
+        .. math::
+           \begin{eqnarray*}
+           \gamma \left[ 1 - e^{-\mu(\gamma)L}\right]
+           \end{eqnarray*}
+           
+        where :math:`\mu` is the LAC of the scintillator, :math:`\gamma` is the x-ray energy (keV), and :math:`L` is the scintillator thickness.
         
         Args:
             chemicalFormula (string): atomic number, chemical formula, mixture of compounds with mass fractions, or member of the material library
@@ -882,7 +891,16 @@ class xrayPhysics:
         return detResp
         
     def filterResponse(self, chemicalFormula, density, thickness, gammas):
-        """X-ray Filter response model
+        r"""X-ray Filter response model
+        
+        The model is given by
+        
+        .. math::
+           \begin{eqnarray*}
+           e^{-\mu(\gamma)L}
+           \end{eqnarray*}
+           
+        where :math:`\mu` is the LAC of the filter material, :math:`\gamma` is the x-ray energy (keV), and :math:`L` is the material thickness.
         
         Args:
             chemicalFormula (string): atomic number, chemical formula, mixture of compounds with mass fractions, or member of the material library
@@ -1006,7 +1024,7 @@ class xrayPhysics:
                 print('Error occured while loading the data', str(e))
         
     def effectiveZ(self, chemicalFormula, min_energy=10.0, max_energy=100.0, arealDensity=0.0):
-        """Calculate the effective atomic number of a material
+        r"""Calculate the effective atomic number of a material
         
         Args:
             chemicalFormula (string): atomic number, chemical formula, mixture of compounds with mass fractions, or member of the material library
@@ -1033,7 +1051,26 @@ class xrayPhysics:
             return 0.0
         
     def effectiveAttenuation(self, Z, density, thickness, spectralResponse, gammas):
-        """Calculate the effective attenuation of a material
+        return self.effectiveLAC(Z, density, thickness, spectralResponse, gammas)
+    
+    def effectiveLAC(self, Z, density, thickness, spectralResponse, gammas):
+        r"""Calculates the effective Linear Attenuation Coefficient (LAC) of a polychromatic x-ray beam through of a material of specified thickness
+        
+        The model is given by
+        
+        .. math::
+           \begin{eqnarray*}
+           \mu_{eff}(L) &:=& \frac{-\log\left(\int \widehat{s}(\gamma) e^{-\mu(\gamma)L} d\gamma\right)}{L} \\
+           \widehat{s}(\gamma) &:=& \frac{s(\gamma)}{\int s(\gamma') d\gamma'}
+           \end{eqnarray*}
+           
+        where :math:`\mu` is the LAC of the material, :math:`\gamma` is the x-ray energy (keV), :math:`L` is the material thickness, and :math:`s` is the x-ray spectra.
+        The limit of :math:`L \rightarrow 0` is given by
+        
+        .. math::
+           \begin{eqnarray*}
+           \mu_{eff}(0) &:=& \int \widehat{s}(\gamma) \mu(\gamma) \, d\gamma
+           \end{eqnarray*}
         
         Args:
             Z (scalar or string): atomic number, chemical formula, mixture of compounds with mass fractions, or member of the material library
@@ -1065,7 +1102,17 @@ class xrayPhysics:
             return self.libxrayphysics.effectiveAttenuation(Z, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
     
     def effectiveEnergy(self, Z, density, thickness, spectralResponse, gammas):
-        """Calculate the effective energy of a material
+        r"""Calculate the effective energy of a polychromatic beam passing through a material of a given thickness
+        
+        The model is given by 
+        
+        .. math::
+           \begin{eqnarray*}
+           \mu(\gamma_{eff}) &:=& \mu_{eff}(L)
+           \end{eqnarray*}
+           
+        i.e., the effective energy is the energy at which the LAC of the material at this energy is equal to the effective LAC of the material.
+        See the description of the effectiveLAC function
         
         Args:
             Z (scalar or string): atomic number, chemical formula, mixture of compounds with mass fractions, or member of the material library
@@ -1097,7 +1144,16 @@ class xrayPhysics:
             return self.libxrayphysics.effectiveEnergy(Z, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
             
     def transmission(self, Z, density, thickness, spectralResponse, gammas):
-        """Calculate the transmission through a given material
+        r"""Calculate the transmission through a given material
+        
+        This model is given by
+        
+        .. math::
+           \begin{eqnarray*}
+           \frac{\int s(\gamma) e^{-\mu(\gamma)L}  \, d\gamma}{\int s(\gamma') d\gamma'}
+           \end{eqnarray*}
+        
+        where :math:`\mu` is the LAC of the material, :math:`\gamma` is the x-ray energy (keV), :math:`L` is the material thickness, and :math:`s` is the x-ray spectra.
         
         Args:
             Z (scalar or string): atomic number, chemical formula, mixture of compounds with mass fractions, or member of the material library
@@ -1129,7 +1185,20 @@ class xrayPhysics:
             return self.libxrayphysics.transmission(Z, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
             
     def setBHlookupTable(self, spectralResponse, gammas, Z, referenceEnergy=0.0, T_atten=0.0, N_atten=0):
-        """Calculate a beam hardening transfer function of a given material
+        r"""Calculate a beam hardening transfer function of a given material
+        
+        This function can be used to model beam hardening.  The model is given by
+        
+        .. math::
+           \begin{eqnarray*}
+           a_{poly} &=& -\log\left( \int \widehat{s}(\gamma) e^{-a_{mono}\widehat{\sigma}(\gamma)} \, d\gamma \right) \\
+           \widehat{\sigma}(\gamma) &:=& \frac{\sigma(\gamma)}{\sigma(\gamma_{ref})} \\
+           \widehat{s}(\gamma) &:=& \frac{s(\gamma)}{\int s(\gamma') d\gamma'}
+           \end{eqnarray*}
+        
+        where :math:`a_{poly}` is the polychromatic attenuation, :math:`a_{mono}` is the monochromatic attenuation at the reference energy, :math:`\gamma_{ref}`,
+        :math:`\gamma` is the x-ray energy (keV), :math:`\sigma` is the mass cross section of the material, and :math:`s` is the x-ray spectra.
+        Note that this function returns :math:`a_{poly}` from a uniform sampling of :math:`a_{mono}`.
         
         Args:
             spectralResponse (numpy array): spectra model
@@ -1140,7 +1209,8 @@ class xrayPhysics:
             N_atten (int): the number of samples of the monochromatic attenuation
         
         Returns:
-            A 1D numpy array that maps monochromatic attenuation to polychromatic attenuation
+            A 1D numpy array that maps monochromatic attenuation to polychromatic attenuation,
+            the sampling rate of the monochromatic attenuation
         
         """
         if N_atten <= 0 or T_atten <= 0.0:
@@ -1178,7 +1248,10 @@ class xrayPhysics:
         return LUT, T_atten
 
     def setBHClookupTable(self, spectralResponse, gammas, Z, referenceEnergy=0.0, T_atten=0.0, N_atten=0):
-        """Calculate a beam hardening correction transfer function of a given material
+        r"""Calculate a beam hardening correction transfer function of a given material
+        
+        This function can be used to correct for single-material beam hardening.  It calculates the inverse of the setBHlookupTable function, i.e.,
+        it returns :math:`a_{mono}` from a uniform sampling of :math:`a_{poly}`.
         
         Args:
             spectralResponse (numpy array): spectra model
@@ -1189,7 +1262,8 @@ class xrayPhysics:
             N_atten (int): the number of samples of the polychromatic attenuation
         
         Returns:
-            A 1D numpy array that maps polychromatic attenuation to monochromatic attenuation
+            A 1D numpy array that maps polychromatic attenuation to monochromatic attenuation,
+            the sampling rate of the polychromatic attenuation
         
         """
         #bool setBHClookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_atten, int N_atten, float referenceEnergy);
@@ -1229,7 +1303,18 @@ class xrayPhysics:
         return LUT, T_atten
         
     def polynomialBHC(self, spectralResponse, gammas, Z, density, referenceEnergy=0.0, maxThickness=10.0, order=2):
-        """Calculate the coefficients of a polynomial-based beam hardening correction transfer function of a given material
+        r"""Calculate the coefficients of a polynomial-based beam hardening correction transfer function of a given material
+        
+        This function can be used to approximately correct for single-material beam hardening;
+        it serves the same purpose as the setBHClookupTable except the correction is approximated by a polynomial which is convenient for some purposes.
+        Applying this correction is done as follows:
+        
+        .. math::
+           \begin{eqnarray*}
+           a_{mono} &=& \sum_n c_n a_{poly}^n
+           \end{eqnarray*}
+           
+        where :math:`c_n` are the polynomial coefficients calculated by this function, :math:`a_{poly}` is the polychromatic attenuation, :math:`a_{mono}` is the monochromatic attenuation at the reference energy.
         
         Args:
             spectralResponse (numpy array): spectra model
@@ -1274,7 +1359,7 @@ class xrayPhysics:
         return np.concatenate((np.zeros((1,1)),np.matmul(np.linalg.inv(A), b)))
         
     def setTwoMaterialBHClookupTable(self, spectralResponse, gammas, sigma_1, sigma_2, referenceEnergy=None, T_atten=0.0, N_atten=0):
-        """Calculate a two-material beam hardening correction transfer function of the two given materials
+        r"""Calculate a two-material beam hardening correction transfer function of the two given materials
         
         Args:
             spectralResponse (numpy array): spectra model
@@ -1318,7 +1403,53 @@ class xrayPhysics:
         return LUT, T_atten
         
     def setDEDlookupTable(self, spectralResponse_L, spectralResponse_H, gammas, basisFunction_1, basisFunction_2, referenceEnergies=None, T_atten=0.0, N_atten=0):
-        """Calculate a dual energy decomposition transfer function
+        r"""Calculate a dual energy decomposition transfer function
+        
+        This function calculates a look up table to perform dual energy decomposition.  The decomposed data are virtual monochromatic attenuation values
+        where the monochromatic energies are given by the referenceEnergies input argument.  We describe how to get the basis coefficients instead of
+        monochromatic attenuation values below.
+        
+        This function solves the following
+        
+        .. math::
+           \begin{eqnarray*}
+           \widehat{a}_L, \widehat{a}_H &:=& \text{argmin} \left[ p_L + \log\left( \int \widehat{s}_L(\gamma) e^{-b_L(\gamma)a_L - b_H(\gamma)a_H} \right) \right]^2 \\
+           &+& \left[ p_H + \log\left( \int \widehat{s}_H(\gamma) e^{-b_L(\gamma)a_L - b_H(\gamma)a_H} \right) \right]^2 
+           \end{eqnarray*}
+           
+        where :math:`p_L` and :math:`p_H` are the measured low and high energy attenuation data, :math:`\widehat{a}_L` and :math:`\widehat{a}_H`
+        are the low and high virtual monochromatic attenuation data, :math:`s_L` and :math:`s_H` are the low and high energy spectra, and
+        :math:`\gamma_L` and :math:`\gamma_H` are the low and high virtual energies (keV).
+        The basis functions are given by
+        
+        .. math::
+           \begin{eqnarray*}
+           \begin{bmatrix} b_L(\gamma) \\ b_H(\gamma) \end{bmatrix} &:=& \begin{bmatrix} b_1(\gamma_L) & b_2(\gamma_L) \\ b_1(\gamma_H) & b_2(\gamma_H) \end{bmatrix}^{-1} \begin{bmatrix} b_1(\gamma) \\ b_2(\gamma) \end{bmatrix}
+           \end{eqnarray*}
+           
+        where :math:`b_1` and :math:`b_2` are the given basis functions (e.g., compton/ photoelectric, LAC of two materials, PCA basis, etc.)
+        
+        Note that the normalized spectra are defined by
+        
+        .. math::
+           \begin{eqnarray*}
+           \widehat{s}_L(\gamma) &:=& \frac{s_L(\gamma)}{\int s_L(\gamma') d\gamma'} \\
+           \widehat{s}_H(\gamma) &:=& \frac{s_H(\gamma)}{\int s_H(\gamma') d\gamma'}
+           \end{eqnarray*}
+           
+        If one wishes to get the basis coefficients then just apply the following transformation
+        
+        .. math::
+           \begin{eqnarray*}
+           \begin{bmatrix} a_1 \\ a_2 \end{bmatrix} &:=& \begin{bmatrix} b_1(\gamma_L) & b_2(\gamma_L) \\ b_1(\gamma_H) & b_2(\gamma_H) \end{bmatrix}^{-1} \begin{bmatrix} a_L \\ a_H \end{bmatrix}
+           \end{eqnarray*}
+        
+           
+        A full description of this algorithm is provided in the following reference:
+        
+        Champley, Kyle M., Stephen G. Azevedo, Isaac M. Seetho, Steven M. Glenn, Larry D. McMichael, Jerel A. Smith, Jeffrey S. Kallman, William D. Brown, and Harry E. Martz.
+        "Method to extract system-independent material properties from dual-energy X-ray CT."
+        IEEE Transactions on Nuclear Science 66, no. 3 (2019): 674-686.
         
         Args:
             spectralResponse_L (numpy array): low energy spectra model
