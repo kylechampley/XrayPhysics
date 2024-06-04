@@ -1424,7 +1424,7 @@ class xrayPhysics:
         
         .. math::
            \begin{eqnarray*}
-           \begin{bmatrix} b_L(\gamma) \\ b_H(\gamma) \end{bmatrix} &:=& \begin{bmatrix} b_1(\gamma_L) & b_2(\gamma_L) \\ b_1(\gamma_H) & b_2(\gamma_H) \end{bmatrix}^{-1} \begin{bmatrix} b_1(\gamma) \\ b_2(\gamma) \end{bmatrix}
+           \begin{bmatrix} b_L(\gamma) \\ b_H(\gamma) \end{bmatrix} &:=& \begin{bmatrix} b_1(\gamma_L) & b_1(\gamma_H) \\ b_2(\gamma_L) & b_2(\gamma_H) \end{bmatrix}^{-1} \begin{bmatrix} b_1(\gamma) \\ b_2(\gamma) \end{bmatrix}
            \end{eqnarray*}
            
         where :math:`b_1` and :math:`b_2` are the given basis functions (e.g., compton/ photoelectric, LAC of two materials, PCA basis, etc.)
