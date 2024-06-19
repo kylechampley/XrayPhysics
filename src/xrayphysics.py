@@ -807,6 +807,14 @@ class xrayPhysics:
     def simulateSpectra(self, kV, takeOffAngle=11.0, Z=74, gammas=None):
         r"""x-ray source spectra model
         
+        This model is based on the following paper:
+        
+        Finkelshtein, A. L., and T. O. Pavlova.
+        "Calculation of x-ray tube spectral distributions."
+        X-Ray Spectrometry: An International Journal 28, no. 1 (1999): 27-32.
+        
+        The strength of the characteristic lines were determined using empirical methods.
+        
         Args:
             kV (scalar): voltage of a bremsstrahlung spectrum
             takeOffAngle (scalar): the take-off angle (degrees) of the reflection anode
@@ -842,8 +850,11 @@ class xrayPhysics:
     def changeTakeOffAngle(self, kV, takeOffAngle_cur, takeOffAngle_new, Z, gammas, spectrum_cur):
         r"""Change the anode take-off angle of a given x-ray source spectra model
         
+        This function uses the Philibert absorption correction factor to modify the given spectra for a different take-off angle.
+        See the paper referenced in the simulateSpectra function for a detailed description of this factor.
+        
         Args:
-            kv (scalar):
+            kv (scalar): voltage of a bremsstrahlung spectrum
             takeOffAngle_cur (scalar): the take-off angle (degrees) of the input spectra
             takeOffAngle_new (scalar): the take-off angle (degress) of the output spectra
             Z (int): the atomic number of the anode material, must be 29, 42, 74, or 79 (Cu, Mo, W, Au)
@@ -874,6 +885,8 @@ class xrayPhysics:
            \end{eqnarray*}
            
         where :math:`\mu` is the LAC of the scintillator, :math:`\gamma` is the x-ray energy (keV), and :math:`L` is the scintillator thickness.
+        This provides a descent approximation of the detector response.  A detailed model of the photodiode response of the detector will
+        provide a better estimate.
         
         Args:
             chemicalFormula (string): atomic number, chemical formula, mixture of compounds with mass fractions, or member of the material library
@@ -1060,8 +1073,8 @@ class xrayPhysics:
         
         .. math::
            \begin{eqnarray*}
-           \mu_{eff}(L) &:=& \frac{-\log\left(\int \widehat{s}(\gamma) e^{-\mu(\gamma)L} d\gamma\right)}{L} \\
-           \widehat{s}(\gamma) &:=& \frac{s(\gamma)}{\int s(\gamma') d\gamma'}
+           \mu_{eff}(L) &:=& \frac{-\log\left(\int \widehat{s}(\gamma) e^{-\mu(\gamma)L} \, d\gamma\right)}{L} \\
+           \widehat{s}(\gamma) &:=& \frac{s(\gamma)}{\int s(\gamma') \, d\gamma'}
            \end{eqnarray*}
            
         where :math:`\mu` is the LAC of the material, :math:`\gamma` is the x-ray energy (keV), :math:`L` is the material thickness, and :math:`s` is the x-ray spectra.
@@ -1150,7 +1163,7 @@ class xrayPhysics:
         
         .. math::
            \begin{eqnarray*}
-           \frac{\int s(\gamma) e^{-\mu(\gamma)L}  \, d\gamma}{\int s(\gamma') d\gamma'}
+           \frac{\int s(\gamma) e^{-\mu(\gamma)L}  \, d\gamma}{\int s(\gamma') \, d\gamma'}
            \end{eqnarray*}
         
         where :math:`\mu` is the LAC of the material, :math:`\gamma` is the x-ray energy (keV), :math:`L` is the material thickness, and :math:`s` is the x-ray spectra.
@@ -1193,7 +1206,7 @@ class xrayPhysics:
            \begin{eqnarray*}
            a_{poly} &=& -\log\left( \int \widehat{s}(\gamma) e^{-a_{mono}\widehat{\sigma}(\gamma)} \, d\gamma \right) \\
            \widehat{\sigma}(\gamma) &:=& \frac{\sigma(\gamma)}{\sigma(\gamma_{ref})} \\
-           \widehat{s}(\gamma) &:=& \frac{s(\gamma)}{\int s(\gamma') d\gamma'}
+           \widehat{s}(\gamma) &:=& \frac{s(\gamma)}{\int s(\gamma') \, d\gamma'}
            \end{eqnarray*}
         
         where :math:`a_{poly}` is the polychromatic attenuation, :math:`a_{mono}` is the monochromatic attenuation at the reference energy, :math:`\gamma_{ref}`,
@@ -1413,8 +1426,8 @@ class xrayPhysics:
         
         .. math::
            \begin{eqnarray*}
-           \widehat{a}_L, \widehat{a}_H &:=& \text{argmin} \left[ p_L + \log\left( \int \widehat{s}_L(\gamma) e^{-b_L(\gamma)a_L - b_H(\gamma)a_H} \right) \right]^2 \\
-           &+& \left[ p_H + \log\left( \int \widehat{s}_H(\gamma) e^{-b_L(\gamma)a_L - b_H(\gamma)a_H} \right) \right]^2 
+           \widehat{a}_L, \widehat{a}_H &:=& \text{argmin} \left[ p_L + \log\left( \int \widehat{s}_L(\gamma) e^{-b_L(\gamma)a_L - b_H(\gamma)a_H} \, d\gamma \right) \right]^2 \\
+           &+& \left[ p_H + \log\left( \int \widehat{s}_H(\gamma) e^{-b_L(\gamma)a_L - b_H(\gamma)a_H} \, d\gamma \right) \right]^2 
            \end{eqnarray*}
            
         where :math:`p_L` and :math:`p_H` are the measured low and high energy attenuation data, :math:`\widehat{a}_L` and :math:`\widehat{a}_H`
@@ -1433,8 +1446,8 @@ class xrayPhysics:
         
         .. math::
            \begin{eqnarray*}
-           \widehat{s}_L(\gamma) &:=& \frac{s_L(\gamma)}{\int s_L(\gamma') d\gamma'} \\
-           \widehat{s}_H(\gamma) &:=& \frac{s_H(\gamma)}{\int s_H(\gamma') d\gamma'}
+           \widehat{s}_L(\gamma) &:=& \frac{s_L(\gamma)}{\int s_L(\gamma') \, d\gamma'} \\
+           \widehat{s}_H(\gamma) &:=& \frac{s_H(\gamma)}{\int s_H(\gamma') \, d\gamma'}
            \end{eqnarray*}
            
         If one wishes to get the basis coefficients then just apply the following transformation
