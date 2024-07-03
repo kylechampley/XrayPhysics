@@ -23,7 +23,7 @@ if _platform == "linux" or _platform == "linux2":
     
 elif _platform == "win32":
     lib_fname = r'win_build\bin\Release\libxrayphysics.dll'
-    retVal = os.system(r'.\etc\win_build.bat')
+    retVal = os.system(r'.\etc\win_build_agn.bat')
     if retVal != 0:
         print('Failed to compile!')
         quit()
