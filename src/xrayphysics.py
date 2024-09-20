@@ -1573,7 +1573,19 @@ class xrayPhysics:
     def print_material_library(self):
         """Prints all materials in the material library"""
         for key in materialFormulas:
-            print(key + ': ' + str(materialFormulas[key]) + ', ' + str(materialDensities[key]) + ' g/cm^3')
+            #print(key + ': ' + str(materialFormulas[key]) + ', ' + str(materialDensities[key]) + ' g/cm^3')
+            if len(key) < 4:
+                print(key + ':\t\t' + str(materialDensities[key]) + ' g/cm^3' + ',\t' + str(materialFormulas[key]))
+            elif len(key) < 7:
+                print(key + ':\t\t' + str(materialDensities[key]) + ' g/cm^3' + ',\t' + str(materialFormulas[key]))
+            elif len(key) < 11:
+                print(key + ':\t' + str(materialDensities[key]) + ' g/cm^3' + ',\t' + str(materialFormulas[key]))
+            else:
+                print(key + ': ' + str(materialDensities[key]) + ' g/cm^3' + ',\t' + str(materialFormulas[key]))
+            
+            
+    def get_material_library(self):
+        return materialFormulas, materialDensities
 
 # Define the material library
 materialFormulas = dict([('vacuum', '78.084*N2 + 20.946*O2 + 0.9340*Ar + 0.0397*CO2'),
