@@ -328,6 +328,7 @@ class xrayPhysics:
             The mass cross section (cm^2/g) of the material at the specified energy or energies
         
         """
+        gamma = self.fixArray(gamma)
         if isinstance(Z, str):
             chemicalFormula = Z
             if chemicalFormula in materialFormulas.keys():
@@ -366,6 +367,7 @@ class xrayPhysics:
             The Photoelectric component of the mass cross section (cm^2/g) of the material at the specified energy or energies
         
         """
+        gamma = self.fixArray(gamma)
         if isinstance(Z, str):
             chemicalFormula = Z
             if chemicalFormula in materialFormulas.keys():
@@ -404,6 +406,7 @@ class xrayPhysics:
             The Compton Scatter component of the mass cross section (cm^2/g) of the material at the specified energy or energies
         
         """
+        gamma = self.fixArray(gamma)
         if isinstance(Z, str):
             chemicalFormula = Z
             if chemicalFormula in materialFormulas.keys():
@@ -442,6 +445,7 @@ class xrayPhysics:
             The Rayleigh Scatter component of the mass cross section (cm^2/g) of the material at the specified energy or energies
         
         """
+        gamma = self.fixArray(gamma)
         if isinstance(Z, str):
             chemicalFormula = Z
             if chemicalFormula in materialFormulas.keys():
@@ -480,6 +484,7 @@ class xrayPhysics:
             The Pair Production component of the mass cross section (cm^2/g) of the material at the specified energy or energies
         
         """
+        gamma = self.fixArray(gamma)
         if isinstance(Z, str):
             chemicalFormula = Z
             if chemicalFormula in materialFormulas.keys():
@@ -518,6 +523,7 @@ class xrayPhysics:
             The Triplet Production component of the mass cross section (cm^2/g) of the material at the specified energy or energies
         
         """
+        gamma = self.fixArray(gamma)
         if isinstance(Z, str):
             chemicalFormula = Z
             if chemicalFormula in materialFormulas.keys():
@@ -584,6 +590,7 @@ class xrayPhysics:
             The electron cross section (cm^2/(mol * e)) of the material at the specified energy or energies
         
         """
+        gamma = self.fixArray(gamma)
         if isinstance(Z, str):
             chemicalFormula = Z
             if chemicalFormula in materialFormulas.keys():
@@ -897,6 +904,8 @@ class xrayPhysics:
         Returns:
             A model of the detector response
         """
+        if density is None:
+            density = self.massDensity(chemicalFormula)
         gammas = self.fixArray(gammas)
         detResp = np.ascontiguousarray(np.zeros(gammas.size), dtype=np.float32)
         for n in range(gammas.size):
@@ -925,6 +934,8 @@ class xrayPhysics:
             A model of the response to the given x-ray filter
         
         """
+        if density is None:
+            density = self.massDensity(chemicalFormula)
         gammas = self.fixArray(gammas)
         filtResp = np.ascontiguousarray(np.zeros(gammas.size), dtype=np.float32)
         for n in range(gammas.size):
@@ -1093,12 +1104,16 @@ class xrayPhysics:
             gammas (numpy array): energies at which the spectra model is defined
         
         Returns:
-            The effective Linear Attenuation Coefficient (LAC, cm^-1)
+            The effective Linear Attenuation Coefficient (LAC, (length units)^-1)
         
         """
         #float effectiveAttenuation(float Z, float density, float thickness, float* spectralResponse, float* gammas, int N);
         gammas = self.fixArray(gammas)
         spectralResponse = self.fixArray(spectralResponse)
+        
+        if density is None:
+            density = self.massDensity(Z)
+        
         if isinstance(Z, str):
             chemicalFormula = Z
             if chemicalFormula in materialFormulas.keys():
@@ -1108,11 +1123,11 @@ class xrayPhysics:
                 
             self.libxrayphysics.effectiveAttenuation_compound.restype = ctypes.c_float
             self.libxrayphysics.effectiveAttenuation_compound.argtypes = [ctypes.c_char_p, ctypes.c_float, ctypes.c_float, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
-            return self.libxrayphysics.effectiveAttenuation_compound(chemicalFormula, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
+            return self.libxrayphysics.effectiveAttenuation_compound(chemicalFormula, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)*self.LAC_scalar()
         else:
             self.libxrayphysics.effectiveAttenuation.restype = ctypes.c_float
             self.libxrayphysics.effectiveAttenuation.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"), ctypes.c_int]
-            return self.libxrayphysics.effectiveAttenuation(Z, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)
+            return self.libxrayphysics.effectiveAttenuation(Z, density/self.density_scalar(), thickness/self.thickness_scalar(), spectralResponse, gammas, gammas.size)*self.LAC_scalar()
     
     def effectiveEnergy(self, Z, density, thickness, spectralResponse, gammas):
         r"""Calculate the effective energy of a polychromatic beam passing through a material of a given thickness
