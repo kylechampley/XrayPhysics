@@ -824,15 +824,16 @@ class xrayPhysics:
         
         Args:
             kV (scalar): voltage of a bremsstrahlung spectrum
-            takeOffAngle (scalar): the take-off angle (degrees) of the reflection anode
+            takeOffAngle (scalar or list): the take-off angle (degrees) of the reflection anode
             Z (int): the atomic number of the anode material, must be 29, 42, 74, or 79 (Cu, Mo, W, Au)
             gammas (numpy array): the energies for which to model the spectra, if unspecified uses default values
             
         Returns:
-            x-ray energy samples, x-ray source spectra model
+            x-ray energy samples, x-ray source spectra model (will be 2D if multiple take-off angles are given)
         
         """
         #simulateSpectra(float kV, float takeOffAngle, int Z, float* gammas, int N, float* output)
+        
         
         if gammas is None:
             maxEnergy = max(1,int(np.ceil(kV)))
@@ -846,6 +847,16 @@ class xrayPhysics:
             gammas = self.fixArray(gammas)
         if Z is None:
             Z = 74
+        
+        if isinstance(takeOffAngle, list) or isinstance(takeOffAngle, np.ndarray):
+            # user specified several take-off angles, so create a spectra for each
+            numSpectrum = len(takeOffAngle)
+            s_all = np.zeros((numSpectrum, gammas.size), dtype=np.float32)
+            for i in range(numSpectrum):
+            
+                gammas, sourceSpectrum = self.simulateSpectra(kV, takeOffAngle[i], Z, gammas)
+                s_all[i,:] = sourceSpectrum[:]
+            return gammas, s_all
         
         sourceSpectrum = np.ascontiguousarray(np.zeros(gammas.size), dtype=np.float32)
         
@@ -1229,7 +1240,7 @@ class xrayPhysics:
         Note that this function returns :math:`a_{poly}` from a uniform sampling of :math:`a_{mono}`.
         
         Args:
-            spectralResponse (numpy array): spectra model
+            spectralResponse (numpy array): spectra model (if 2D, assumes multiple spectra are given and will generate a table to each spectra)
             gammas (numpy array): energies at which the spectra model is defined
             Z (scalar or string): atomic number, chemical formula, mixture of compounds with mass fractions, or member of the material library
             referenceEnergy (scalar): the energy (keV) of the monochromatic attenuation (if not specified uses the mean energy of the spectra)
@@ -1241,6 +1252,25 @@ class xrayPhysics:
             the sampling rate of the monochromatic attenuation
         
         """
+        
+        if len(spectralResponse.shape) == 2:
+            # user specified several spectra, so create a lookup table to each spectra
+            if spectralResponse.shape[0] == gammas.size:
+                spectralResponse = np.transpose(spectralResponse)
+            numSpectrum = spectralResponse.shape[0]
+            spec = gammas.copy()
+            for i in range(numSpectrum):
+                spec[:] = spectralResponse[i,:]
+                if referenceEnergy <= 0.0:
+                    #referenceEnergy = self.meanEnergy(spectralResponse, gammas)
+                    referenceEnergy = self.effectiveEnergy(Z, 1.0, 0.0, spec, gammas)
+                    print('referenceEnergy = ' + str(referenceEnergy))
+                LUT, T_atten = self.setBHlookupTable(spec, gammas, Z, referenceEnergy, T_atten, N_atten)
+                if i == 0:
+                    LUTs = np.zeros((numSpectrum, LUT.size), dtype=np.float32)
+                LUTs[i,:] = LUT[:]
+            return LUTs, T_atten
+        
         if N_atten <= 0 or T_atten <= 0.0:
             max_lac = 48.0
             T_atten = 1.0e-3 # about 66 counts max
@@ -1282,7 +1312,7 @@ class xrayPhysics:
         it returns :math:`a_{mono}` from a uniform sampling of :math:`a_{poly}`.
         
         Args:
-            spectralResponse (numpy array): spectra model
+            spectralResponse (numpy array): spectra model (if 2D, assumes multiple spectra are given and will generate a table to each spectra)
             gammas (numpy array): energies at which the spectra model is defined
             Z (scalar or string): atomic number, chemical formula, mixture of compounds with mass fractions, or member of the material library
             referenceEnergy (scalar): the energy (keV) of the monochromatic attenuation (if not specified uses the mean energy of the spectra)
@@ -1295,6 +1325,24 @@ class xrayPhysics:
         
         """
         #bool setBHClookupTable(float Ze, float* spectralResponse, float* gammas, int N_gamma, float* LUT, float T_atten, int N_atten, float referenceEnergy);
+        
+        if len(spectralResponse.shape) == 2:
+            # user specified several spectra, so create a lookup table to each spectra
+            if spectralResponse.shape[0] == gammas.size:
+                spectralResponse = np.transpose(spectralResponse)
+            numSpectrum = spectralResponse.shape[0]
+            spec = gammas.copy()
+            for i in range(numSpectrum):
+                spec[:] = spectralResponse[i,:]
+                if referenceEnergy <= 0.0:
+                    #referenceEnergy = self.meanEnergy(spectralResponse, gammas)
+                    referenceEnergy = self.effectiveEnergy(Z, 1.0, 0.0, spec, gammas)
+                    print('referenceEnergy = ' + str(referenceEnergy))
+                LUT, T_atten = self.setBHClookupTable(spec, gammas, Z, referenceEnergy, T_atten, N_atten)
+                if i == 0:
+                    LUTs = np.zeros((numSpectrum, LUT.size), dtype=np.float32)
+                LUTs[i,:] = LUT[:]
+            return LUTs, T_atten
         
         if N_atten <= 0 or T_atten <= 0.0:
             max_atten = 12.0
