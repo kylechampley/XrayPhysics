@@ -1,0 +1,40 @@
+[build-system]
+requires = ["scikit-build-core"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "xrayphysics"
+authors = [
+    { name = "Kyle Champley", email = "champley@gmail.com" },
+]
+description = "x-ray cross section tables, x-ray tube source simulation, beam hardening correction, and dual energy decompositon"
+readme = "README.md"
+requires-python = ">=3.6"
+#license = { text = "internal use only" }
+dependencies = [
+    "numpy",
+]
+version = "1.2"
+
+[project.optional-dependencies]
+
+[tool.scikit-build]
+
+# Extra args to pass directly to the builder in the build step.
+build.tool-args = []
+
+# The build targets to use when building the project. Empty builds the default
+# target.
+build.targets = []
+
+# The components to install. If empty, all default components are installed.
+install.components = []
+
+sdist.cmake = true
+sdist.include = [
+    "LICENSE",
+]
+
+wheel.packages = ["src/xrayphysics"]
+wheel.license-files = ["LICENSE.txt"]
+wheel.py-api = "py3"

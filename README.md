@@ -16,6 +16,25 @@ The x-ray source models are at least as accurate as TASMICS and much more flexib
 
 ## Installation and Usage
 
+A python *wheel* package can be built and installed as follows.
+
+```commandline
+python -m pip install --upgrade pip build
+python -m build .
+pip install dist/xrayphysics*whl
+```
+
+The wildcard `*` is used in the above example because the exact package file name may vary.
+
+If the build system cannot find all dependencies, they can be provided with CMake variables.
+For example,
+
+```commandline
+python -m build . \
+    -Ccmake.define.CMAKE_PREFIX_PATH=/opt/homebrew \
+    -Ccmake.define.OpenMP_ROOT=/opt/homebrew/opt/libomp
+```
+
 Documentation is available [here](https://xrayphysics.readthedocs.io/)
 
 Installation and usage information is posted on the [wiki page](https://github.com/kylechampley/XrayPhysics/wiki)
@@ -40,4 +59,3 @@ Champley, Kyle M., Stephen G. Azevedo, Isaac M. Seetho, Steven M. Glenn, Larry D
 Kyle Champley and Timo Bremer. ”Efficient and Accurate Correction of
 Beam Hardening Artifacts.”, 3rd International Congress on Image Formation
 in X-ray CT, 2014.
-
