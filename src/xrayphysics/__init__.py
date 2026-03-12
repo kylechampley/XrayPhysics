@@ -160,7 +160,7 @@ class xrayPhysics:
         Args:
             gammas (numpy array): the energy samples (keV) of the given spectra
             s (numpy array): the given spectra to resample
-            gammmas_out (numpy array): the energy samples (keV) to rebin to
+            gammas_out (numpy array): the energy samples (keV) to rebin to
         
         Returns:
             resampled spectra

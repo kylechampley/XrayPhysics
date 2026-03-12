@@ -1,10 +1,3 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-
-project(xrayphysics CXX)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 find_package(OpenMP REQUIRED)
 
 if (WIN32)
@@ -62,7 +55,7 @@ target_link_libraries(${PROJECT_NAME}
 
 install(TARGETS ${PROJECT_NAME}
   PUBLIC_HEADER DESTINATION include
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION xrayphysics
+  ARCHIVE DESTINATION xrayphysics
+  LIBRARY DESTINATION xrayphysics
 )
